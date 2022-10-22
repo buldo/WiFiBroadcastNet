@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace WiFiBroadcastNet.SystemHelpers;
 
@@ -10,29 +7,35 @@ internal class LinuxHelpers : IOsCommandHelper
 {
     public void SetUnmanagedMode(string deviceName)
     {
-        throw new NotImplementedException();
+        Execute("nmcli", $"device set {deviceName} managed no");
     }
 
     public void SetMonitorMode(string deviceName)
     {
-        throw new NotImplementedException();
+        Execute("iw", $"dev {deviceName} set monitor otherbss");
     }
-}
 
-internal class NotImplementedHelpers : IOsCommandHelper
-{
-    public void SetUnmanagedMode(string deviceName)
+    public void SetFrequency(string deviceName, Frequency frequency)
     {
+        Execute("iw", $"dev {deviceName} set freq {frequency.ValueInMHz}");
     }
 
-    public void SetMonitorMode(string deviceName)
+    private void Execute(string name, string args)
     {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = name,
+            Arguments = args,
+            // WorkingDirectory = 
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            StandardErrorEncoding = Encoding.UTF8,
+            StandardOutputEncoding = Encoding.UTF8
+        };
+        
+        var process = Process.Start(startInfo);
+
+        process?.WaitForExit(TimeSpan.FromSeconds(10));
     }
-}
-
-internal interface IOsCommandHelper
-{
-    void SetUnmanagedMode(string deviceName);
-
-    void SetMonitorMode(string deviceName);
 }

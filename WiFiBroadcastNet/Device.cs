@@ -1,35 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿using System.Net.NetworkInformation;
 using SharpPcap;
-using SharpPcap.LibPcap;
-
 using WiFiBroadcastNet.SystemHelpers;
 
 namespace WiFiBroadcastNet;
 
 public class Device
 {
-    private readonly ILiveDevice _realDevice;
+    private readonly ILiveDevice _pcapDevice;
     private readonly NetworkInterface _networkInterface;
     private readonly IOsCommandHelper _commandHelper;
 
     internal Device(
-        ILiveDevice realDevice, 
+        ILiveDevice pcapDevice, 
         NetworkInterface networkInterface, 
         IOsCommandHelper commandHelper)
     {
-        _realDevice = realDevice;
+        _pcapDevice = pcapDevice;
         _networkInterface = networkInterface;
         _commandHelper = commandHelper;
     }
 
-    internal void PrepareOs()
+    public void PrepareOs()
     {
-        _commandHelper.SetMonitorMode(_realDevice.Name);
+        _commandHelper.SetUnmanagedMode(_networkInterface.Name);
+        _commandHelper.SetMonitorMode(_networkInterface.Name);
+    }
+
+    public void SetFrequency(Frequency frequency)
+    {
+        _commandHelper.SetFrequency(_networkInterface.Name, frequency);
+    }
+
+    public void Open()
+    {
+        _pcapDevice.Open(new DeviceConfiguration
+        {
+            Mode = DeviceModes.Promiscuous,
+            Immediate = true
+        });
     }
 }

@@ -13,4 +13,9 @@ public class Transmitter
     {
         _device.Open();
     }
+
+    public void Send(byte[] bytes)
+    {
+        throw new NotImplementedException();
+    }
 }

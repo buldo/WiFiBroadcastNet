@@ -19,4 +19,22 @@ txDevice.SetFrequency(Frequencies.F5805);
 var transmitter = new Transmitter(txDevice);
 transmitter.Start();
 
+var testData = new byte[1024];
+Random.Shared.NextBytes(testData);
+
+var readTask = ReadTask(receiver, testData);
+var writeTask = WriteTask(transmitter, testData);
+
+var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+cts.Token.WaitHandle.WaitOne();
 Console.WriteLine("End");
+
+async Task ReadTask(Receiver receiver, byte[] bytes)
+{
+
+}
+
+async Task WriteTask(Transmitter transmitter, byte[] bytes)
+{
+    transmitter.Send(bytes);
+}

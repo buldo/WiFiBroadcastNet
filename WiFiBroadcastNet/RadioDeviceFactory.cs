@@ -27,7 +27,7 @@ public class RadioDeviceFactory
             string.Equals(iface.Name, deviceName, StringComparison.InvariantCultureIgnoreCase));
         var physicalAddress = networkInterface.GetPhysicalAddress();
         var pcapInterface =
-            LibPcapLiveDeviceList.Instance.Single(device => device.MacAddress.Equals(physicalAddress));
+            LibPcapLiveDeviceList.Instance.Single(device => device.MacAddress?.Equals(physicalAddress) ?? false);
         return new Device(pcapInterface, networkInterface, _currentOsHelper);
     }
 }

@@ -7,13 +7,13 @@ using WiFiBroadcastNet.Tx;
 Console.WriteLine("Starting");
 
 var factory = new RadioDeviceFactory();
-var rxDevice = factory.CreateDeviceByName("");
+var rxDevice = factory.CreateDeviceByName("wlx502b73201c53");
 rxDevice.PrepareOs();
 rxDevice.SetFrequency(Frequencies.F5805);
 var receiver = new Receiver(new[] { rxDevice });
 receiver.Start();
 
-var txDevice = factory.CreateDeviceByName("");
+var txDevice = factory.CreateDeviceByName("wlx502b736002d8");
 txDevice.PrepareOs();
 txDevice.SetFrequency(Frequencies.F5805);
 var transmitter = new Transmitter(txDevice);

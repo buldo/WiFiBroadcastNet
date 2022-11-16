@@ -34,8 +34,11 @@ internal class LinuxHelpers : IOsCommandHelper
             StandardOutputEncoding = Encoding.UTF8
         };
         
-        var process = Process.Start(startInfo);
-
+        
+        var process = new Process(){StartInfo = startInfo};
+        process.OutputDataReceived += (sender, eventArgs) => Console.WriteLine(eventArgs.Data);
+        process.ErrorDataReceived += (sender, eventArgs) => Console.WriteLine(eventArgs.Data);
+        process.Start();
         process?.WaitForExit(TimeSpan.FromSeconds(10));
     }
 }

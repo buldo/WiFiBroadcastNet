@@ -31,7 +31,7 @@ Console.WriteLine("End");
 
 async Task ReadTask(Receiver receiver, byte[] bytes)
 {
-
+    Console.WriteLine($"Received {bytes.Length} bytes");
 }
 
 async Task WriteTask(Transmitter transmitter, byte[] bytes)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -7,4 +7,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Grpc.AspNetCore" Version="2.52.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <Protobuf Include="Protos\tx_server.proto" />
+    </ItemGroup>
 </Project>

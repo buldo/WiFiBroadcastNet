@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+service TxServer {
+  rpc StartTransmit (StartTxRequest) returns (StartTxReply);
+}
+
+message StartTxRequest {
+  string job_name = 1;
+  uint32 packets_count = 2;
+  uint32 packet_data_length = 3;
+  uint32 channel = 4;
+}
+
+message StartTxReply {
+}

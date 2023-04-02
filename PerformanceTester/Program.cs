@@ -9,14 +9,14 @@ Console.WriteLine("Hello, World!");
 
 var tasks = new List<Task>();
 
-var txServer = new TxHost();
+var txServer = new TxHost("wlx502b736002d8");
 if (isTx)
 {
     var txTask = txServer.StartAsync();
     tasks.Add(txTask);
 }
 
-var rxServer = new RxHost();
+var rxServer = new RxHost("wlx502b73201c53");
 if (isRx)
 {
     var rxTask = rxServer.StartAsync();

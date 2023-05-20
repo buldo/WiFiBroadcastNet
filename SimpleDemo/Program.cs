@@ -7,6 +7,9 @@ using WiFiBroadcastNet.Tx;
 Console.WriteLine("Starting");
 
 var factory = new RadioDeviceFactory();
+
+var devices = factory.GetWifiAdapters();
+
 var rxDevice = factory.CreateDeviceByName("wlx502b73201c53");
 rxDevice.PrepareOs();
 rxDevice.SetFrequency(Frequencies.F5805);

@@ -1,12 +1,22 @@
-using System.Net.NetworkInformation;
+using WiFiBroadcastNet.SystemHelpers;
 
 namespace WiFiBroadcastNet;
 
 public class DeviceDescription
 {
-    public NetworkInterface Interface { get; internal init; }
+    internal DeviceDescription(
+        NlInterface nlInterface,
+        UeventDescription ueventDescription)
+    {
+        NlInterface = nlInterface;
+        UeventDescription = ueventDescription;
+    }
 
-    public int PhyIndex { get; internal init; }
-    
-    public UeventDescription UeventDescription { get; internal init; }
+    public int PhyIndex => NlInterface.WiPhy;
+
+    public string Name => NlInterface.IfName;
+
+    public UeventDescription UeventDescription { get; }
+
+    internal NlInterface NlInterface { get; }
 }

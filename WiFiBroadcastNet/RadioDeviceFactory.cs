@@ -6,57 +6,37 @@ namespace WiFiBroadcastNet;
 
 public class RadioDeviceFactory
 {
-    private readonly IOsCommandHelper _currentOsHelper;
+    private readonly LinuxHelpers _currentOsHelper;
 
     public RadioDeviceFactory()
     {
-        if (Environment.OSVersion.Platform == PlatformID.Unix)
-        {
-            _currentOsHelper = new LinuxHelpers();
-        }
-        else
-        {
-            _currentOsHelper = new NotImplementedHelpers();
-        }
+        _currentOsHelper = new LinuxHelpers();
     }
 
     public List<DeviceDescription> GetWifiAdapters()
     {
-        var allDevices = NetworkInterface.GetAllNetworkInterfaces();
+        var allDevices = _currentOsHelper.GetWirelessInterfaces();
 
         var devices = new List<DeviceDescription>();
         foreach (var dev in allDevices)
         {
-            var phyIndexFileName = $"/sys/class/net/{dev.Name}/phy80211/index";
-            if (!File.Exists(phyIndexFileName))
-            {
-                continue;
-            }
-
-            var phyIndex = int.Parse(File.ReadAllText(phyIndexFileName));
-            
-            var deviceFileName = $"/sys/class/net/{dev.Name}/device/uevent";
+            var deviceFileName = $"/sys/class/net/{dev.IfName}/device/uevent";
             if (!File.Exists(deviceFileName))
             {
                 continue;
             }
-            
+
             var ueventContent = File.ReadAllLines(deviceFileName);
             var ueventDesc = UeventDescription.Parse(ueventContent);
 
-            var deviceDescription = new DeviceDescription
-            {
-                UeventDescription = ueventDesc,
-                Interface = dev,
-                PhyIndex = phyIndex
-            };
-            
+            var deviceDescription = new DeviceDescription(dev, ueventDesc);
+
             devices.Add(deviceDescription);
         }
 
         return devices;
     }
-    
+
     public Device CreateDeviceByName(string deviceName)
     {
         var interfaces = NetworkInterface.GetAllNetworkInterfaces();

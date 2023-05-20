@@ -8,12 +8,12 @@ public class Device
 {
     private readonly ILiveDevice _pcapDevice;
     private readonly NetworkInterface _networkInterface;
-    private readonly IOsCommandHelper _commandHelper;
+    private readonly LinuxHelpers _commandHelper;
 
     internal Device(
-        ILiveDevice pcapDevice, 
-        NetworkInterface networkInterface, 
-        IOsCommandHelper commandHelper)
+        ILiveDevice pcapDevice,
+        NetworkInterface networkInterface,
+        LinuxHelpers commandHelper)
     {
         _pcapDevice = pcapDevice;
         _networkInterface = networkInterface;

@@ -10,14 +10,11 @@ namespace SendSinglePacketDemo
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            var interfaces = LinuxDevicesHelper.GetWirelessInterfaces();
-            foreach (var nlInterface in interfaces)
-            {
-                Console.WriteLine($"{nlInterface.InterfaceName} {nlInterface.WiPhy}");
-            }
-            //var runResult = await ProcessEx.RunAsync("iw", $"{device.InterfaceName} set monitor otherbss");
+            var ifName = "wlan1";
+            var runResult = await ProcessEx.RunAsync("iw", $"{ifName} set monitor otherbss");
+            Console.WriteLine(runResult.StandardOutput.Concat(runResult.StandardError));
             //return string.Join(Environment.NewLine, runResult.StandardOutput.Concat(runResult.StandardError));
         }
     }

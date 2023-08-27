@@ -1,9 +1,13 @@
 ﻿using System.Diagnostics;
-
+using System.Net.NetworkInformation;
 using Bld.Libnl.Net.Netlink;
 using Bld.Libnl.Net.Nl80211;
 using Bld.Libnl.Net.Nl80211.Enums;
-
+using Bld.WlanUtils;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using PacketDotNet;
+using PacketDotNet.Ieee80211;
 using RunProcessAsTask;
 using SharpPcap;
 using SharpPcap.LibPcap;
@@ -13,19 +17,68 @@ namespace SendSinglePacketDemo;
 internal class Program
 {
     /// <summary>
-    /// sudo iw wlan1 set monitor otherbss
-    /// sudo iw wlan1 set channel 48
+    /// sudo iw wlx00c0caa98097 set monitor otherbss
+    /// sudo iw dev wlx00c0caa98097 set freq 5180 HT20
     /// </summary>
     static async Task Main(string[] args)
     {
-        var device = LibPcapLiveDeviceList.Instance.Single(d => d.Name == "wlan1");
-        device.OnPacketArrival += DeviceOnOnPacketArrival;
-        device.Open(new DeviceConfiguration(){Mode = DeviceModes.Promiscuous, Monitor = MonitorMode.Active});
-        device.Capture();
+        var deviceName = "wlx00c0caa98097";
+
+        var wlanManager = new WlanManager(NullLoggerFactory.Instance.CreateLogger<WlanManager>());
+        await wlanManager.TrySwitchToMonitorAsync(deviceName);
+        await wlanManager.IwSetFrequencyAndChannelWidth(deviceName, 5240, ChannelWidth._20MHz);
+
+        var device = LibPcapLiveDeviceList.Instance.Single(d => d.Name == deviceName);
+
+        device.Open(new DeviceConfiguration(){Mode = DeviceModes.Promiscuous});
+        //device.OnPacketArrival += DeviceOnOnPacketArrival;
+        //device.Capture();
+        //Console.WriteLine("Press enter");
+        //Console.ReadLine();
+        //device.StopCapture();
+
+        var dataDataFrame = new DataDataFrame()
+        {
+            FrameControl = { ToDS = false, FromDS = true, MoreFragments = true },
+            SequenceControl = { SequenceNumber = 0x01, FragmentNumber = 0x1 },
+            Duration = { Field = 0x1234 },
+            DestinationAddress = PhysicalAddress.Parse("01:02:03:04:05:06"),
+            SourceAddress = PhysicalAddress.Parse("07:08:09:0A:0B:0C"),
+            PayloadData = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05 }
+        };
+        dataDataFrame.UpdateCalculatedValues();
+        var radioPacket = new RadioPacket
+        {
+            PayloadPacket = dataDataFrame
+        };
+        radioPacket.UpdateCalculatedValues();
+
+        Console.WriteLine("START SPAM");
+        for (int i = 0; i < 10000; i++)
+        {
+            device.SendPacket(radioPacket);
+            await Task.Delay(100);
+        }
+        Console.WriteLine("FINISH");
     }
 
     private static void DeviceOnOnPacketArrival(object sender, PacketCapture e)
     {
-        var packet = e.GetPacket();
+        var rawPacket = e.GetPacket();
+        var packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
+        var radioPacket = packet.Extract<RadioPacket>();
+
+        if (radioPacket.HasPayloadPacket)
+        {
+            var payloadPacket = radioPacket.PayloadPacket;
+            if (payloadPacket is DataDataFrame)
+            {
+                Console.WriteLine(radioPacket.PayloadPacket.GetType() + "    " + radioPacket.PayloadPacket.ToString());
+            }
+        }
+        else
+        {
+            //Console.WriteLine(radioPacket.ToString());
+        }
     }
 }

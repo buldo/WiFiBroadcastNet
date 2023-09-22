@@ -4,15 +4,15 @@ namespace WiFiBroadcastNet;
 public class UeventDescription
 {
     public string DevType { get; private set; }
-    
+
     public string Driver { get; private set; }
-    
+
     public string Product { get; private set; }
-    
+
     public string Type { get; private set; }
-    
+
     public string Interface { get; private set; }
-    
+
     public string ModAlias { get; private set; }
 
     /// <remarks>

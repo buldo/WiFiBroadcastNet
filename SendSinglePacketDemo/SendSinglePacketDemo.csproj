@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bld.Libnl.Net" Version="0.0.0-alpha.0.39" />
-    <PackageReference Include="Bld.WlanUtils" Version="0.1.0" />
+    <PackageReference Include="Bld.WlanUtils" Version="0.2.0" />
     <PackageReference Include="SharpPcap" Version="6.2.5" />
     <PackageReference Include="RunProcessAsTask" Version="1.2.4" />
   </ItemGroup>

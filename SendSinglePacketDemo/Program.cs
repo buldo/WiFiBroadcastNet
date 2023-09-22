@@ -26,7 +26,7 @@ internal class Program
 
         var wlanManager = new WlanManager(NullLoggerFactory.Instance.CreateLogger<WlanManager>());
         await wlanManager.TrySwitchToMonitorAsync(deviceName);
-        await wlanManager.IwSetFrequencyAndChannelWidth(deviceName, 5240, ChannelWidth._20MHz);
+        await wlanManager.IwSetFrequencyAndChannelWidth(deviceName, Channels.Ch140, ChannelWidth._20MHz);
 
         var device = LibPcapLiveDeviceList.Instance.Single(d => d.Name == deviceName);
 
@@ -39,12 +39,11 @@ internal class Program
 
         var dataDataFrame = new DataDataFrame()
         {
-            FrameControl = { ToDS = false, FromDS = true, MoreFragments = true },
-            SequenceControl = { SequenceNumber = 0x01, FragmentNumber = 0x1 },
+            FrameControl = { ToDS = false, FromDS = true },
             Duration = { Field = 0x1234 },
             DestinationAddress = PhysicalAddress.Parse("01:02:03:04:05:06"),
             SourceAddress = PhysicalAddress.Parse("07:08:09:0A:0B:0C"),
-            PayloadData = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05 }
+            PayloadData = new byte[] { 0x11, 0x12, 0x13, 0x14, 0x15 }
         };
         dataDataFrame.UpdateCalculatedValues();
         var radioPacket = new RadioPacket
@@ -54,7 +53,7 @@ internal class Program
         radioPacket.UpdateCalculatedValues();
 
         Console.WriteLine("START SPAM");
-        for (int i = 0; i < 10000; i++)
+        for (int i = 0; i < 2; i++)
         {
             device.SendPacket(radioPacket);
             await Task.Delay(100);

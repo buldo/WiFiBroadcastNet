@@ -1,19 +1,41 @@
-﻿namespace WiFiBroadcastNet.Rx;
+﻿using System.Threading.Channels;
+
+namespace WiFiBroadcastNet.Rx;
 
 public class Receiver
 {
-    private List<Device> _devices;
+    private readonly List<AttachedDevice> _devices = new();
 
-    public Receiver(IEnumerable<Device> devices)
+    public Receiver(IEnumerable<IDevice> devices)
     {
-        _devices = devices.ToList();
+        foreach (var device in devices)
+        {
+            AttachDevice(device);
+        }
     }
 
     public void Start()
     {
-        foreach (var device in _devices)
+
+    }
+
+    private void AttachDevice(IDevice device)
+    {
+        var at = new AttachedDevice(device);
+        _devices.Add(at);
+    }
+
+    private class AttachedDevice
+    {
+        public AttachedDevice(IDevice device)
         {
-            device.Open();
+            Device = device;
+            device.AttachReader(FramesChannel.Writer);
         }
+
+        public IDevice Device { get; }
+
+        public Channel<RxFrame> FramesChannel { get; } = Channel.CreateUnbounded<RxFrame>(new()
+            { AllowSynchronousContinuations = false, SingleReader = true, SingleWriter = true });
     }
 }

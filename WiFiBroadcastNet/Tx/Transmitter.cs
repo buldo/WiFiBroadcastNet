@@ -1,17 +1,19 @@
-﻿namespace WiFiBroadcastNet.Tx;
+﻿using WiFiBroadcastNet.Devices;
+
+namespace WiFiBroadcastNet.Tx;
 
 public class Transmitter
 {
-    private readonly Device _device;
+    private readonly PcapDevice _pcapDevice;
 
-    public Transmitter(Device device)
+    public Transmitter(PcapDevice pcapDevice)
     {
-        _device = device;
+        _pcapDevice = pcapDevice;
     }
 
     public void Start()
     {
-        _device.Open();
+        _pcapDevice.Open();
     }
 
     public void Send(byte[] bytes)

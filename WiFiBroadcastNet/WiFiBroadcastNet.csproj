@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Bld.Libnl.Net" Version="0.0.0-alpha.0.39" />
     <PackageReference Include="Bld.Rtl8812auNet" Version="1.0.0" />
+    <PackageReference Include="Bld.WlanUtils" Version="0.2.0" />
     <PackageReference Include="SharpPcap" Version="6.2.5" />
     <PackageReference Include="System.Threading.Channels" Version="8.0.0-rc.1.23419.4" />
   </ItemGroup>

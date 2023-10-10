@@ -2,5 +2,5 @@
 
 public class RxFrame
 {
-    public byte[] Data { get; }
+    public byte[] Data { get; init; }
 }

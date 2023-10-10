@@ -2,15 +2,15 @@
 using SharpPcap;
 using WiFiBroadcastNet.SystemHelpers;
 
-namespace WiFiBroadcastNet;
+namespace WiFiBroadcastNet.Devices;
 
-public class Device
+public class PcapDevice
 {
     private readonly ILiveDevice _pcapDevice;
     private readonly NetworkInterface _networkInterface;
     private readonly LinuxHelpers _commandHelper;
 
-    internal Device(
+    internal PcapDevice(
         ILiveDevice pcapDevice,
         NetworkInterface networkInterface,
         LinuxHelpers commandHelper)

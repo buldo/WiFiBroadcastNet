@@ -11,6 +11,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SendSinglePacketDemo", "Sen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WiFiBroadcastNet.GroundHost", "WiFiBroadcastNet.GroundHost\WiFiBroadcastNet.GroundHost.csproj", "{020AEC6D-D0A8-4105-AF14-296296DCE19F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CCEB2FD7-B79D-4FBF-91AF-579BC6A07B40}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -1,9 +1,8 @@
 ﻿using System.Net.NetworkInformation;
 using SharpPcap.LibPcap;
-using WiFiBroadcastNet.Devices;
 using WiFiBroadcastNet.SystemHelpers;
 
-namespace WiFiBroadcastNet;
+namespace WiFiBroadcastNet.Devices;
 
 public class RadioDeviceFactory
 {
@@ -38,7 +37,7 @@ public class RadioDeviceFactory
         return devices;
     }
 
-    public PcapDevice CreateDeviceByName(string deviceName)
+    public PcapRadioDevice CreateDeviceByName(string deviceName)
     {
         var interfaces = NetworkInterface.GetAllNetworkInterfaces();
         var networkInterface = interfaces.Single(iface =>
@@ -46,6 +45,6 @@ public class RadioDeviceFactory
         var physicalAddress = networkInterface.GetPhysicalAddress();
         var pcapInterface =
             LibPcapLiveDeviceList.Instance.Single(device => device.MacAddress?.Equals(physicalAddress) ?? false);
-        return new PcapDevice(pcapInterface, networkInterface, _currentOsHelper);
+        return new PcapRadioDevice(pcapInterface, networkInterface, _currentOsHelper);
     }
 }

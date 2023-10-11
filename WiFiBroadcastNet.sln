@@ -5,13 +5,11 @@ VisualStudioVersion = 17.4.33015.44
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WiFiBroadcastNet", "WiFiBroadcastNet\WiFiBroadcastNet.csproj", "{FC33404A-CA19-4D9C-9793-0C0FDDC7EF06}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDemo", "SimpleDemo\SimpleDemo.csproj", "{9CCB4C91-A3CF-4621-AECF-58AB130AE322}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PerformanceTester", "PerformanceTester\PerformanceTester.csproj", "{BF7AC9DC-3B82-4F14-8A25-D505835CF6F1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SendSinglePacketDemo", "SendSinglePacketDemo\SendSinglePacketDemo.csproj", "{762A5035-80C6-4982-ABFE-846BAEB65DEE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WiFiBroadcastNet.GroundHost", "WiFiBroadcastNet.GroundHost\WiFiBroadcastNet.GroundHost.csproj", "{020AEC6D-D0A8-4105-AF14-296296DCE19F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WiFiBroadcastNet.GroundHost", "WiFiBroadcastNet.GroundHost\WiFiBroadcastNet.GroundHost.csproj", "{020AEC6D-D0A8-4105-AF14-296296DCE19F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +21,6 @@ Global
 		{FC33404A-CA19-4D9C-9793-0C0FDDC7EF06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC33404A-CA19-4D9C-9793-0C0FDDC7EF06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC33404A-CA19-4D9C-9793-0C0FDDC7EF06}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9CCB4C91-A3CF-4621-AECF-58AB130AE322}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9CCB4C91-A3CF-4621-AECF-58AB130AE322}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9CCB4C91-A3CF-4621-AECF-58AB130AE322}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9CCB4C91-A3CF-4621-AECF-58AB130AE322}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BF7AC9DC-3B82-4F14-8A25-D505835CF6F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BF7AC9DC-3B82-4F14-8A25-D505835CF6F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF7AC9DC-3B82-4F14-8A25-D505835CF6F1}.Release|Any CPU.ActiveCfg = Release|Any CPU

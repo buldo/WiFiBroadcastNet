@@ -7,7 +7,7 @@ using ChannelWidth = Rtl8812auNet.Rtl8812au.Enumerations.ChannelWidth;
 
 namespace WiFiBroadcastNet.Devices;
 
-public class RtlDevice : IDevice
+public class UserspaceRadioDevice : IRadioDevice
 {
     private readonly Rtl8812aDevice _rtlDevice;
 
@@ -15,7 +15,7 @@ public class RtlDevice : IDevice
     private WlanChannel _channel = Channels.Ch036;
     private bool _isStarted = false;
 
-    public RtlDevice(Rtl8812aDevice rtlDevice)
+    public UserspaceRadioDevice(Rtl8812aDevice rtlDevice)
     {
         _rtlDevice = rtlDevice;
     }

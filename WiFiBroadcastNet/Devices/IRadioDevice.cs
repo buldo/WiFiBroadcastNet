@@ -4,7 +4,7 @@ using Bld.WlanUtils;
 
 namespace WiFiBroadcastNet.Devices;
 
-public interface IDevice
+public interface IRadioDevice
 {
     void StartReceiving(ChannelWriter<RxFrame> receivedFramesChannel);
 

@@ -2,5 +2,5 @@
 
 public interface IDevicesProvider
 {
-    public List<IDevice> GetDevices();
+    public List<IRadioDevice> GetDevices();
 }

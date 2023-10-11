@@ -7,11 +7,11 @@ using WiFiBroadcastNet.Devices;
 
 namespace WiFiBroadcastNet;
 
-public class WiFiBroadcastInterface
+public class WfbLink
 {
     private readonly List<DeviceHandler> _deviceHandlers;
 
-    public WiFiBroadcastInterface(IDevicesProvider devicesProvider)
+    public WfbLink(IDevicesProvider devicesProvider)
     {
         _deviceHandlers = devicesProvider
             .GetDevices()
@@ -30,15 +30,15 @@ public class WiFiBroadcastInterface
 
 internal class DeviceHandler
 {
-    private readonly IDevice _device;
+    private readonly IRadioDevice _device;
 
-    public DeviceHandler(IDevice device)
+    public DeviceHandler(IRadioDevice device)
     {
         _device = device;
     }
 
     public void Start()
     {
-        _device.AttachReader();
+
     }
 }

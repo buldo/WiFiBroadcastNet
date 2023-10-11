@@ -17,7 +17,7 @@ internal class Program
 
         using var driver = new WiFiDriver(loggerFactory);
         var devicesProvider = new AutoDevicesProvider(driver);
-        var iface = new WiFiBroadcastInterface(devicesProvider);
+        var iface = new WfbLink(devicesProvider);
         iface.Start();
     }
 }

@@ -12,14 +12,14 @@ public class AutoDevicesProvider : IDevicesProvider
         _wiFiDriver = wiFiDriver;
     }
 
-    public List<IDevice> GetDevices()
+    public List<IRadioDevice> GetDevices()
     {
         var usbDevices = _wiFiDriver.GetUsbDevices();
-        List<IDevice> devices = new();
+        List<IRadioDevice> devices = new();
         foreach (var device in usbDevices)
         {
             var rtlDevice = _wiFiDriver.CreateRtlDevice(device);
-            var wrapper = new RtlDevice(rtlDevice);
+            var wrapper = new UserspaceRadioDevice(rtlDevice);
             devices.Add(wrapper);
         }
 

@@ -7,7 +7,7 @@ public class Receiver
 {
     private readonly List<AttachedDevice> _devices = new();
 
-    public Receiver(IEnumerable<IDevice> devices)
+    public Receiver(IEnumerable<IRadioDevice> devices)
     {
         foreach (var device in devices)
         {
@@ -20,7 +20,7 @@ public class Receiver
 
     }
 
-    private void AttachDevice(IDevice device)
+    private void AttachDevice(IRadioDevice device)
     {
         var at = new AttachedDevice(device);
         _devices.Add(at);
@@ -28,13 +28,13 @@ public class Receiver
 
     private class AttachedDevice
     {
-        public AttachedDevice(IDevice device)
+        public AttachedDevice(IRadioDevice device)
         {
             Device = device;
-            device.AttachReader(FramesChannel.Writer);
+
         }
 
-        public IDevice Device { get; }
+        public IRadioDevice Device { get; }
 
         public Channel<RxFrame> FramesChannel { get; } = Channel.CreateUnbounded<RxFrame>(new()
             { AllowSynchronousContinuations = false, SingleReader = true, SingleWriter = true });

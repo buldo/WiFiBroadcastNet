@@ -1,16 +1,20 @@
 ﻿using System.Net.NetworkInformation;
+using System.Threading.Channels;
+
+using Bld.WlanUtils;
+
 using SharpPcap;
 using WiFiBroadcastNet.SystemHelpers;
 
 namespace WiFiBroadcastNet.Devices;
 
-public class PcapDevice
+public class PcapRadioDevice : IRadioDevice
 {
     private readonly ILiveDevice _pcapDevice;
     private readonly NetworkInterface _networkInterface;
     private readonly LinuxHelpers _commandHelper;
 
-    internal PcapDevice(
+    internal PcapRadioDevice(
         ILiveDevice pcapDevice,
         NetworkInterface networkInterface,
         LinuxHelpers commandHelper)
@@ -38,5 +42,15 @@ public class PcapDevice
             Mode = DeviceModes.Promiscuous,
             Immediate = true
         });
+    }
+
+    public void StartReceiving(ChannelWriter<RxFrame> receivedFramesChannel)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SetChannel(WlanChannel channel)
+    {
+        throw new NotImplementedException();
     }
 }

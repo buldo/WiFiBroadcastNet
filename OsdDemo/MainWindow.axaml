@@ -14,8 +14,32 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Button Grid.Row="0" Command="{Binding ConnectCommand}">Connect</Button>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <ListBox Grid.Column="1" ItemsSource="{Binding MavlinkStat}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="viewModels:MavlinkStatViewModel">
+                        <TextBlock>
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0}: {1}">
+                                    <Binding Path="Name"/>
+                                    <Binding Path="Count"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <TextBlock Text="{Binding PacketsCount, StringFormat='MavLink RX packets: {0}'}"/>
+            <TextBlock Margin="3,0,0,0" Text="{Binding StatusText, StringFormat='Status: {0}'}"/>
         </StackPanel>
     </Grid>
 </Window>

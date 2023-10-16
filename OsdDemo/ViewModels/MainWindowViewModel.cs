@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Asv.Mavlink;
-
+using Asv.Mavlink.V2.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace OsdDemo.ViewModels;
 internal class MainWindowViewModel : ObservableObject
 {
+    private readonly Dictionary<string, MavlinkStatViewModel> _statsByName = new();
     private int _packetsCount;
+    private string _statusText;
 
     public MainWindowViewModel()
     {
@@ -22,11 +25,11 @@ internal class MainWindowViewModel : ObservableObject
 
     public AsyncRelayCommand ConnectCommand { get; }
 
-    public int PacketsCount
-    {
-        get => _packetsCount;
-        set => SetProperty(ref _packetsCount, value);
-    }
+    public int PacketsCount { get => _packetsCount; set => SetProperty(ref _packetsCount, value); }
+
+    public string StatusText { get => _statusText; set => SetProperty(ref _statusText, value); }
+
+    public ObservableCollection<MavlinkStatViewModel> MavlinkStat { get; } = new();
 
     private async Task ExecuteConnect()
     {
@@ -38,6 +41,27 @@ internal class MainWindowViewModel : ObservableObject
     private void OnPacket(IPacketV2<IPayload> packet)
     {
         PacketsCount++;
+        if (_statsByName.TryGetValue(packet.Name, out var stat))
+        {
+            stat.Count++;
+        }
+        else
+        {
+            stat = new MavlinkStatViewModel
+            {
+                Name = packet.Name,
+                Count = 1
+            };
+
+            _statsByName[packet.Name] = stat;
+            MavlinkStat.Add(stat);
+        }
+
+        if (packet.Payload is StatustextPayload statusTextPayload)
+        {
+            StatusText = new string(statusTextPayload.Text);
+        }
+
         //Interlocked.Increment(ref _packetCount);
         //try
         //{
@@ -82,4 +106,17 @@ internal class MainWindowViewModel : ObservableObject
     }
 
 
+}
+
+public class MavlinkStatViewModel : ObservableObject
+{
+    private int _count;
+
+    public required string Name { get; init; }
+
+    public int Count
+    {
+        get => _count;
+        set => SetProperty(ref _count, value);
+    }
 }

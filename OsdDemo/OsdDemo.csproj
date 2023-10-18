@@ -21,4 +21,9 @@
     <PackageReference Include="LibVLCSharp.Avalonia" Version="3.8.0" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
   </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\OsdDemo.Windows\OsdDemo.Windows.csproj" />
+  </ItemGroup>
 </Project>

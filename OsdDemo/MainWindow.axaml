@@ -14,7 +14,10 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Button Grid.Row="0" Command="{Binding ConnectCommand}">Connect</Button>
+        <Button Grid.Row="0"
+                Background="Chartreuse"
+                Foreground="Red"
+                Command="{Binding ConnectCommand}">Connect</Button>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -32,17 +35,16 @@
                 >
                 <Button>Teeeeest</Button>
             </uCanvas:VideoView>-->
-            <Button>Arrrrr</Button>
 
-            <!--<ListBox Grid.Column="0"
+            <ListBox Grid.Column="0"
                      ItemsSource="{Binding MavlinkStat}"
                      HorizontalAlignment="Right"
                      VerticalAlignment="Stretch"
                      Width="200"
-                     ZIndex="128">
+                     Background="Transparent">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="viewModels:MavlinkStatViewModel">
-                        <TextBlock Foreground="GreenYellow" Background="GreenYellow">
+                        <TextBlock Foreground="GreenYellow" Background="Transparent">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}{0}: {1}">
                                     <Binding Path="Name"/>
@@ -52,12 +54,17 @@
                         </TextBlock>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
-            </ListBox>-->
+            </ListBox>
         </Grid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal">
-            <TextBlock Text="{Binding PacketsCount, StringFormat='MavLink RX packets: {0}'}"/>
-            <TextBlock Margin="3,0,0,0" Text="{Binding StatusText, StringFormat='Status: {0}'}"/>
+            <TextBlock
+                Foreground="GreenYellow"
+                Text="{Binding PacketsCount, StringFormat='MavLink RX packets: {0}'}"/>
+            <TextBlock
+                Foreground="GreenYellow"
+                Margin="3,0,0,0"
+                Text="{Binding StatusText, StringFormat='Status: {0}'}"/>
         </StackPanel>
     </Grid>
 </Window>

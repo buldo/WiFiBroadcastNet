@@ -11,7 +11,6 @@ using Asv.Mavlink.V2.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using LibVLCSharp.Shared;
 
 using OsdDemo.Windows;
 
@@ -46,7 +45,7 @@ internal class MainWindowViewModel : ObservableObject
         conn.Subscribe(OnPacket);
         conn.DeserializePackageErrors.Subscribe(OnError);
 
-        VideoWindowViewModel.Play();
+        //VideoWindowViewModel.Play();
     }
 
     private void OnPacket(IPacketV2<IPayload> packet)

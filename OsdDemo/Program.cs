@@ -13,8 +13,6 @@ internal class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        GstModule.Init();
-
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }

@@ -6,9 +6,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 
-using Gst;
-using Application = Gst.Application;
-
 namespace OsdDemo.Windows;
 
 public partial class VideoWindow : Window
@@ -20,7 +17,6 @@ public partial class VideoWindow : Window
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
-        var pipeline = new CustomWindowsGstPipeline();
         //var a = Functions.
         //var pipeline = new Pipeline();
         //pipeline.Add()

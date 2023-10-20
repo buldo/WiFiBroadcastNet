@@ -3,10 +3,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:OsdDemo.ViewModels"
+        xmlns:avalonia="clr-namespace:LibVLCSharp.Avalonia;assembly=LibVLCSharp.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="OsdDemo.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
-        Background="Transparent"
         Title="OsdDemo">
     <Grid>
         <Grid.RowDefinitions>
@@ -19,22 +19,17 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-
-            <!--<uCanvas:VideoView
+            <avalonia:VideoView
                 Grid.Column="0"
                 MediaPlayer="{Binding MediaPlayer}"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                ZIndex="0"
+                ZIndex="0" />
 
-                >
-                <Button>Teeeeest</Button>
-            </uCanvas:VideoView>-->
-            <Button>Arrrrr</Button>
-
-            <!--<ListBox Grid.Column="0"
+            <ListBox Grid.Column="1"
                      ItemsSource="{Binding MavlinkStat}"
                      HorizontalAlignment="Right"
                      VerticalAlignment="Stretch"
@@ -42,7 +37,7 @@
                      ZIndex="128">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="viewModels:MavlinkStatViewModel">
-                        <TextBlock Foreground="GreenYellow" Background="GreenYellow">
+                        <TextBlock>
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}{0}: {1}">
                                     <Binding Path="Name"/>
@@ -52,7 +47,7 @@
                         </TextBlock>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
-            </ListBox>-->
+            </ListBox>
         </Grid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal">

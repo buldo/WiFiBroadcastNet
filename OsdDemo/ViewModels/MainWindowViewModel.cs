@@ -23,17 +23,6 @@ internal class MainWindowViewModel : ObservableObject
                                    a=rtpmap:96 H264/90000
                                    """;
 
-    private readonly string _sdp2 = "sdp://" +
-                                    "v=0\n" +
-                                    "o=-29878 0 IN IP4 10.2.4.108\n" +
-                                    "s=Visu\n" +
-                                    "c=IN IP4 10.2.4.108\n" +
-                                    "t=0 0\n" +
-                                    "m=audio 15000 RTP/AVP 0\n" +
-                                    "a=rtpmap:0 PCMU/8000\n" +
-                                    "m=video 15002 RTP/AVP 115\n" +
-                                    "a=rtpmap:115 H263-1998/90000/90000\n" +
-                                    "a=fmtp:115 VGA=2;CIF=1;QCIF=1;CIF4=2;I=1;J=1;T=1";
     private readonly Dictionary<string, MavlinkStatViewModel> _statsByName = new();
     private readonly LibVLC _libVlc = new LibVLC();
     private readonly Media _media;
@@ -45,7 +34,11 @@ internal class MainWindowViewModel : ObservableObject
     public MainWindowViewModel()
     {
         ConnectCommand = new AsyncRelayCommand(ExecuteConnect);
-        MediaPlayer = new MediaPlayer(_libVlc);
+        MediaPlayer = new MediaPlayer(_libVlc)
+        {
+            NetworkCaching = 25
+        };
+
         _media = new Media(_libVlc, _sdp, FromType.FromLocation);
     }
 

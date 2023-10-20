@@ -9,46 +9,51 @@ namespace OsdDemo;
 public partial class MainWindow : Window
 {
     private readonly MainWindowViewModel _dataContext;
-    private readonly VideoWindow _videoWindow;
+    private readonly WindowsPlaybackModule _playbackModule;
+
     public MainWindow()
     {
         InitializeComponent();
-        var videoWindowViewModel = new VideoWindowViewModel();
-        _dataContext = new MainWindowViewModel(videoWindowViewModel);
-        _videoWindow = new VideoWindow
-        {
-            DataContext = _dataContext.VideoWindowViewModel
-        };
-        _videoWindow.Loaded += VideoWindowOnLoaded;
+
+        _playbackModule = new WindowsPlaybackModule();
+
+        _playbackModule.VideoWindow.Loaded += VideoWindowOnLoaded;
+        _dataContext = new MainWindowViewModel(_playbackModule);
         DataContext = _dataContext;
         PositionChanged += OnPositionChanged;
         SizeChanged += OnSizeChanged;
     }
 
-    private void VideoWindowOnLoaded(object? sender, RoutedEventArgs e)
+    private void VideoWindowOnLoaded(object sender, System.Windows.RoutedEventArgs routedEventArgs)
     {
         Activate();
+        UpdatePosition();
     }
 
     private void OnSizeChanged(object? sender, SizeChangedEventArgs e)
     {
-        _videoWindow.Width = Width;
-        _videoWindow.Height = Height;
+        _playbackModule.VideoWindow.SetSizeInPixels(MainGrid.Bounds.Width, MainGrid.Bounds.Height);
     }
 
     private void OnPositionChanged(object? sender, PixelPointEventArgs e)
     {
-        _videoWindow.Position = e.Point;
+        UpdatePosition();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
-        _videoWindow.Show();
+        _playbackModule.VideoWindow.Show();
         Activate();
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        _videoWindow.Close();
+        _playbackModule.VideoWindow.Close();
+    }
+
+    private void UpdatePosition()
+    {
+        var pos = this.PointToScreen(MainGrid.Bounds.TopLeft);
+        _playbackModule.VideoWindow.SetPositionInPixels(pos.X, pos.Y);
     }
 }

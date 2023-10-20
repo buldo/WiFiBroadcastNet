@@ -1,22 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <!--<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>-->
     <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Asv.Mavlink" Version="3.4.2-alpha10" />
-        <PackageReference Include="Avalonia" Version="11.0.5-rc1" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.0.5-rc1" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.5-rc1" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.5-rc1" />
-        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.5-rc1" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FlyleafLib" Version="3.7.29" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="FFmpeg\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>

@@ -1,0 +1,21 @@
+﻿<Window x:Class="OsdDemo.Windows.VideoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OsdDemo.Windows"
+        xmlns:wpf="clr-namespace:FlyleafLib.Controls.WPF;assembly=FlyleafLib"
+        mc:Ignorable="d"
+        Title="VideoWindow"
+        BorderThickness="0" Margin="0"
+        ShowInTaskbar="False"
+        >
+    <WindowChrome.WindowChrome>
+        <WindowChrome
+            CaptionHeight="0"
+            ResizeBorderThickness="0"
+            GlassFrameThickness="0"
+            CornerRadius="0" NonClientFrameEdges="None" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+    <wpf:FlyleafHost Name="VideoHost" Player="{Binding Player}" AttachedDragMove="Both" KeyBindings="Both"/>
+</Window>

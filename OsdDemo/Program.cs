@@ -1,7 +1,4 @@
-﻿using System;
-
-using Avalonia;
-using OsdDemo.Windows;
+﻿using Avalonia;
 
 namespace OsdDemo;
 

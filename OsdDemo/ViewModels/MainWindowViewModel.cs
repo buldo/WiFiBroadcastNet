@@ -17,15 +17,16 @@ using OsdDemo.Windows;
 namespace OsdDemo.ViewModels;
 internal class MainWindowViewModel : ObservableObject
 {
+    public WindowsPlaybackModule WindowsPlaybackModule { get; }
     private readonly Dictionary<string, MavlinkStatViewModel> _statsByName = new();
 
     private int _packetsCount;
     private string _statusText;
 
 
-    public MainWindowViewModel(VideoWindowViewModel videoWindowViewModel)
+    public MainWindowViewModel(WindowsPlaybackModule windowsPlaybackModule)
     {
-        VideoWindowViewModel = videoWindowViewModel;
+        WindowsPlaybackModule = windowsPlaybackModule;
         ConnectCommand = new AsyncRelayCommand(ExecuteConnect);
     }
 
@@ -36,8 +37,6 @@ internal class MainWindowViewModel : ObservableObject
     public string StatusText { get => _statusText; set => SetProperty(ref _statusText, value); }
 
     public ObservableCollection<MavlinkStatViewModel> MavlinkStat { get; } = new();
-
-    public VideoWindowViewModel VideoWindowViewModel { get; }
 
     private async Task ExecuteConnect()
     {
@@ -116,17 +115,4 @@ internal class MainWindowViewModel : ObservableObject
     }
 
 
-}
-
-public class MavlinkStatViewModel : ObservableObject
-{
-    private int _count;
-
-    public required string Name { get; init; }
-
-    public int Count
-    {
-        get => _count;
-        set => SetProperty(ref _count, value);
-    }
 }

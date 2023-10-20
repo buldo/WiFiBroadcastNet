@@ -7,8 +7,9 @@
         x:Class="OsdDemo.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
         Background="Transparent"
+        Topmost="True"
         Title="OsdDemo">
-    <Grid>
+    <Grid Name="MainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -23,18 +24,6 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-
-
-            <!--<uCanvas:VideoView
-                Grid.Column="0"
-                MediaPlayer="{Binding MediaPlayer}"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                ZIndex="0"
-
-                >
-                <Button>Teeeeest</Button>
-            </uCanvas:VideoView>-->
 
             <ListBox Grid.Column="0"
                      ItemsSource="{Binding MavlinkStat}"

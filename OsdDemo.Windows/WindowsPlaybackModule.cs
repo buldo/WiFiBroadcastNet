@@ -28,6 +28,7 @@ public class WindowsPlaybackModule
             UIRefresh = false,    // Required for Activity, BufferedDuration, Stats in combination with Config.Player.Stats = true
             UIRefreshInterval = 250,      // How often (in ms) to notify the UI
             UICurTimePerSecond = true,     // Whether to notify UI for CurTime only when it's second changed or by UIRefreshInterval
+            
         });
 
         ViewModel = new VideoWindowViewModel();

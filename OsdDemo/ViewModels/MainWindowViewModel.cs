@@ -17,7 +17,7 @@ using OsdDemo.Windows;
 namespace OsdDemo.ViewModels;
 internal class MainWindowViewModel : ObservableObject
 {
-    public WindowsPlaybackModule WindowsPlaybackModule { get; }
+    private readonly WindowsPlaybackModule _windowsPlaybackModule;
     private readonly Dictionary<string, MavlinkStatViewModel> _statsByName = new();
 
     private int _packetsCount;
@@ -26,7 +26,7 @@ internal class MainWindowViewModel : ObservableObject
 
     public MainWindowViewModel(WindowsPlaybackModule windowsPlaybackModule)
     {
-        WindowsPlaybackModule = windowsPlaybackModule;
+        _windowsPlaybackModule = windowsPlaybackModule;
         ConnectCommand = new AsyncRelayCommand(ExecuteConnect);
     }
 
@@ -44,7 +44,7 @@ internal class MainWindowViewModel : ObservableObject
         conn.Subscribe(OnPacket);
         conn.DeserializePackageErrors.Subscribe(OnError);
 
-        //VideoWindowViewModel.Play();
+        _windowsPlaybackModule.ViewModel.Play();
     }
 
     private void OnPacket(IPacketV2<IPayload> packet)

@@ -49,6 +49,16 @@ public class PcapRadioDevice : IRadioDevice
         throw new NotImplementedException();
     }
 
+    public void AttachDataConsumer(ChannelWriter<RxFrame> receivedFramesChannel)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void StartReceiving()
+    {
+        throw new NotImplementedException();
+    }
+
     public void SetChannel(WlanChannel channel)
     {
         throw new NotImplementedException();

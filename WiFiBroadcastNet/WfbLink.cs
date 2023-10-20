@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using WiFiBroadcastNet.Crypto;
@@ -38,14 +39,16 @@ public class WfbLink
 internal class DeviceHandler
 {
     private readonly IRadioDevice _device;
+    private readonly Channel<RxFrame> _framesChannel = Channel.CreateUnbounded<RxFrame>();
 
     public DeviceHandler(IRadioDevice device)
     {
         _device = device;
+        _device.AttachDataConsumer(_framesChannel.Writer);
     }
 
     public void Start()
     {
-
+        _device.StartReceiving();
     }
 }

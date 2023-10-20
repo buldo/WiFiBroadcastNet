@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Rtl8812auNet;
 
@@ -10,14 +12,38 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        var loggerFactory = LoggerFactory.Create(builder =>
-            builder
-                .SetMinimumLevel(LogLevel.Trace)
-                .AddConsole());
+        var builder = Host.CreateApplicationBuilder(args);
+        builder.Logging
+            .SetMinimumLevel(LogLevel.Trace)
+            .AddConsole();
+        builder.Services.AddHostedService<WfbHost>();
 
-        using var driver = new WiFiDriver(loggerFactory);
-        var devicesProvider = new AutoDevicesProvider(driver);
-        var iface = new WfbLink(devicesProvider);
-        iface.Start();
+        var host = builder.Build();
+        host.Run();
+    }
+}
+
+public class WfbHost : IHostedService
+{
+    private readonly WiFiDriver _driver;
+    private readonly WfbLink _iface;
+
+    public WfbHost(ILoggerFactory loggerFactory)
+    {
+        _driver = new WiFiDriver(loggerFactory);
+        var devicesProvider = new AutoDevicesProvider(_driver);
+        _iface = new WfbLink(devicesProvider);
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _iface.Start();
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        //throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 }

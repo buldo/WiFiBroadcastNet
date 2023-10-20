@@ -20,6 +20,23 @@ public class UserspaceRadioDevice : IRadioDevice
         _rtlDevice = rtlDevice;
     }
 
+    public void AttachDataConsumer(ChannelWriter<RxFrame> receivedFramesChannel)
+    {
+        _receivedFramesChannelWriter = receivedFramesChannel;
+    }
+
+    public void StartReceiving()
+    {
+        if (_isStarted == true)
+        {
+            throw new Exception("Already started");
+        }
+
+        StartDevice();
+        ApplyChannel();
+        _isStarted = true;
+    }
+
     public void SetChannel(WlanChannel channel)
     {
         _channel = channel;
@@ -27,20 +44,6 @@ public class UserspaceRadioDevice : IRadioDevice
         {
             ApplyChannel();
         }
-    }
-
-    public void StartReceiving(ChannelWriter<RxFrame> receivedFramesChannel)
-    {
-        if (_isStarted == true)
-        {
-            throw new Exception("Already started");
-        }
-
-        _receivedFramesChannelWriter = receivedFramesChannel;
-
-        StartDevice();
-        ApplyChannel();
-        _isStarted = true;
     }
 
     private void StartDevice()
@@ -51,7 +54,7 @@ public class UserspaceRadioDevice : IRadioDevice
 
     private async Task PacketProcessor(ParsedRadioPacket arg)
     {
-        await _receivedFramesChannelWriter.WriteAsync(new RxFrame()
+        await _receivedFramesChannelWriter.WriteAsync(new RxFrame
         {
             Data = arg.Data,
         });

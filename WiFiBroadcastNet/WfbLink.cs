@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ASodium;
+
 using Bld.WlanUtils;
 using Microsoft.Extensions.Logging;
 using WiFiBroadcastNet.Crypto;
@@ -22,12 +24,34 @@ public class WfbLink
     {
         {128, new RadioStream(128, new NullFec(), new NullCrypto()) }
     };
+    private readonly Decryptor m_decryptor;
 
     public WfbLink(
         IDevicesProvider devicesProvider,
         ILogger<WfbLink> logger)
     {
         _logger = logger;
+
+
+
+        KeyPairTxRx keypair;
+        //if (m_options.secure_keypair.has_value())
+        //{
+        //    keypair = m_options.secure_keypair.value();
+        //}
+        //else
+        {
+            keypair = CryptoHelpers.generate_keypair_from_bind_phrase();
+        }
+
+        m_decryptor = new Decryptor(logger, keypair.get_rx_key(!true));
+
+        // next session key in delta ms if packets are being fed
+        //m_session_key_next_announce_ts = std::chrono::steady_clock::now();
+        // Per libsodium documentation, the first nonce should be chosen randomly
+        // This selects a random nonce in 32-bit range - we therefore have still 32-bit increasing indexes left, which means tx can run indefinitely
+        //m_nonce = randombytes_random();
+
         _deviceHandlers = devicesProvider
             .GetDevices()
             .Select(device => new DeviceHandler(device, ProcessRxFrame))
@@ -72,7 +96,7 @@ public class WfbLink
 
         if (radio_port.MultiplexIndex == STREAM_INDEX_SESSION_KEY_PACKETS)
         {
-            ProcessSessionKeyFrame();
+            ProcessSessionKeyFrame(radio_port, frame);
         }
         else
         {
@@ -96,70 +120,45 @@ public class WfbLink
             return;
         }
 
-        var decrypt_res = m_decryptor->onNewPacketSessionKeyData(sessionKeyPacket.sessionKeyNonce, sessionKeyPacket.sessionKeyData);
-        if (decrypt_res == wb::Decryptor::SESSION_VALID_NEW || decrypt_res == wb::Decryptor::SESSION_VALID_NOT_NEW)
-        {
-            if (wlan_idx == 0)
-            { // Pollution is calculated only on card0
-                m_pollution_openhd_rx_packets++;
-            }
-            m_likely_wrong_encryption_valid_session_keys++;
-        }
-        else
-        {
-            m_likely_wrong_encryption_invalid_session_keys++;
-        }
+        var decrypt_res = m_decryptor.onNewPacketSessionKeyData(sessionKeyPacket.sessionKeyNonce, sessionKeyPacket.sessionKeyData);
+        //if (decrypt_res == DecryptorResult.SESSION_VALID_NEW || decrypt_res == DecryptorResult.SESSION_VALID_NOT_NEW)
+        //{
+        //    if (wlan_idx == 0)
+        //    { // Pollution is calculated only on card0
+        //        m_pollution_openhd_rx_packets++;
+        //    }
+        //    m_likely_wrong_encryption_valid_session_keys++;
+        //}
+        //else
+        //{
+        //    m_likely_wrong_encryption_invalid_session_keys++;
+        //}
 
         // A lot of invalid session keys and no valid session keys hint at a bind phrase mismatch
-        const auto elapsed_likely_wrong_key = std::chrono::steady_clock::now() - m_likely_wrong_encryption_last_check;
-        if (elapsed_likely_wrong_key > std::chrono::seconds(5))
-        {
-            // No valid session key(s) and at least one invalid session key
-            if (m_likely_wrong_encryption_valid_session_keys == 0 && m_likely_wrong_encryption_invalid_session_keys >= 1)
-            {
-                m_rx_stats.likely_mismatching_encryption_key = true;
-            }
-            else
-            {
-                m_rx_stats.likely_mismatching_encryption_key = false;
-            }
-            m_likely_wrong_encryption_last_check = std::chrono::steady_clock::now();
-            m_likely_wrong_encryption_valid_session_keys = 0;
-            m_likely_wrong_encryption_invalid_session_keys = 0;
-        }
+        //var elapsed_likely_wrong_key = std::chrono::steady_clock::now() - m_likely_wrong_encryption_last_check;
+        //if (elapsed_likely_wrong_key > std::chrono::seconds(5))
+        //{
+        //    // No valid session key(s) and at least one invalid session key
+        //    if (m_likely_wrong_encryption_valid_session_keys == 0 && m_likely_wrong_encryption_invalid_session_keys >= 1)
+        //    {
+        //        m_rx_stats.likely_mismatching_encryption_key = true;
+        //    }
+        //    else
+        //    {
+        //        m_rx_stats.likely_mismatching_encryption_key = false;
+        //    }
+        //    m_likely_wrong_encryption_last_check = std::chrono::steady_clock::now();
+        //    m_likely_wrong_encryption_valid_session_keys = 0;
+        //    m_likely_wrong_encryption_invalid_session_keys = 0;
+        //}
 
-        if (decrypt_res == wb::Decryptor::SESSION_VALID_NEW)
+        if (decrypt_res == DecryptorResult.SESSION_VALID_NEW)
         {
-            m_console->debug("Initializing new session.");
-            m_rx_stats.n_received_valid_session_key_packets++;
-            for (auto & handler:m_rx_handlers)
+            _logger.LogDebug("Initializing new session.");
+            foreach (var (key, radioStream) in _radioStreams)
             {
-                auto opt_cb_session = handler.second->cb_session;
-                if (opt_cb_session)
-                {
-                    opt_cb_session();
-                }
+                radioStream.cb_session();
             }
         }
     }
 }
-
-public class SessionKeyPacket
-{
-    private readonly RxFrame _frame;
-    private static int crypto_box_NONCEBYTES;
-    private static int crypto_aead_chacha20poly1305_KEYBYTES;
-    private static int crypto_box_MACBYTES;
-
-    public SessionKeyPacket(RxFrame frame)
-    {
-        _frame = frame;
-    }
-
-    public bool IsValid => _frame.Payload.Length ==
-                           crypto_box_NONCEBYTES + crypto_aead_chacha20poly1305_KEYBYTES + crypto_box_MACBYTES;
-
-    public Span<byte> sessionKeyNonce => _frame.Payload.Slice(0, crypto_box_NONCEBYTES); // random data
-
-    public Span<byte> sessionKeyData => _frame.Payload.Slice(crypto_box_NONCEBYTES, crypto_aead_chacha20poly1305_KEYBYTES + crypto_box_MACBYTES); // encrypted session key
-};

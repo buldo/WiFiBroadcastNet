@@ -25,4 +25,9 @@ internal class RadioStream
     }
 
     public int Id { get; }
+
+    public void cb_session()
+    {
+
+    }
 }

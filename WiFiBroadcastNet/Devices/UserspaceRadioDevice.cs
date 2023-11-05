@@ -69,7 +69,7 @@ public class UserspaceRadioDevice : IRadioDevice
     {
         return new SelectedChannel
         {
-            Channel = (byte)_channel.ChannelFrequencyMHz,
+            Channel = (byte)_channel.ChannelNumber,
             ChannelOffset = 0,
             ChannelWidth = ChannelWidth.CHANNEL_WIDTH_20
         };

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Bld.WlanUtils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -32,12 +33,15 @@ public class WfbHost : IHostedService
     {
         _driver = new WiFiDriver(loggerFactory);
         var devicesProvider = new AutoDevicesProvider(_driver);
-        _iface = new WfbLink(devicesProvider);
+        _iface = new WfbLink(
+            devicesProvider,
+            loggerFactory.CreateLogger<WfbLink>());
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _iface.Start();
+        _iface.SetChannel(Channels.Ch149);
         return Task.CompletedTask;
     }
 

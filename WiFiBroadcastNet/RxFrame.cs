@@ -44,14 +44,14 @@ public class RxFrame
 
     public Span<byte> Payload => _data.AsSpan(24..^4);
 
-    public UInt64 GetNonce()
+    public ReadOnlySpan<byte> GetNonce()
     {
-        Span<byte> data = stackalloc byte[8];
+        Span<byte> data = new byte[8];
 
         MacSrcNoncePart1.CopyTo(data.Slice(0, 4));
         MacDstNoncePart2.CopyTo(data.Slice(4, 4));
 
-        return BinaryPrimitives.ReadUInt64BigEndian(data);
+        return data;
     }
 
     public RadioPort get_valid_radio_port()

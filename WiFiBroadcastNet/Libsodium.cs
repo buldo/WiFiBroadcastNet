@@ -7,6 +7,11 @@ internal static class Libsodium
 
     }
 
+    public static int crypto_aead_chacha20poly1305_ABYTES()
+    {
+        return (int)SpaceWizards.Sodium.Interop.Libsodium.crypto_aead_chacha20poly1305_ABYTES;
+    }
+
     public static int crypto_box_NONCEBYTES()
     {
         return (int)SpaceWizards.Sodium.Interop.Libsodium.crypto_box_NONCEBYTES;

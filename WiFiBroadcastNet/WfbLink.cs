@@ -1,29 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ASodium;
-
-using Bld.WlanUtils;
+﻿using Bld.WlanUtils;
 using Microsoft.Extensions.Logging;
 using WiFiBroadcastNet.Crypto;
 using WiFiBroadcastNet.Devices;
-using WiFiBroadcastNet.Fec;
 using WiFiBroadcastNet.RadioStreams;
 
 namespace WiFiBroadcastNet;
 
 public class WfbLink
 {
-    private static readonly byte STREAM_INDEX_SESSION_KEY_PACKETS = 127;
-
     private readonly bool _useGndIdentifier = true; // Air/ground selector
     private readonly ILogger<WfbLink> _logger;
     private readonly List<DeviceHandler> _deviceHandlers;
 
-    private readonly Dictionary<int, RadioStream> _radioStreams = new();
-    private readonly Decryptor m_decryptor;
+    private readonly Dictionary<int, IRadioStream> _radioStreams = new();
+    private readonly Decryptor _decryptor;
 
     public WfbLink(
         IDevicesProvider devicesProvider,
@@ -41,10 +31,19 @@ public class WfbLink
             keypair = CryptoHelpers.generate_keypair_from_bind_phrase();
         }
 
-        m_decryptor = new Decryptor(logger, keypair.get_rx_key(!true));
+        _decryptor = new Decryptor(logger, keypair.get_rx_key(!true));
 
-        var sessionKeyStream = new SessionKeysRadioStream(m_decryptor, _logger);
+        var sessionKeyStream = new SessionKeysRadioStream(_decryptor, _logger);
         _radioStreams.Add(sessionKeyStream.Id, sessionKeyStream);
+
+        var stream04 = new FecStream(04);
+        _radioStreams.Add(stream04.Id, stream04);
+
+        var stream10 = new FecStream(10);
+        _radioStreams.Add(stream10.Id, stream10);
+
+        var stream20 = new FecStream(20);
+        _radioStreams.Add(stream20.Id, stream20);
 
         // next session key in delta ms if packets are being fed
         //m_session_key_next_announce_ts = std::chrono::steady_clock::now();
@@ -74,7 +73,7 @@ public class WfbLink
         }
     }
 
-    private readonly HashSet<byte> _knownIndexes = new HashSet<byte>();
+    //private readonly HashSet<byte> _knownIndexes = new HashSet<byte>();
 
     private void ProcessRxFrame(RxFrame frame)
     {
@@ -95,18 +94,34 @@ public class WfbLink
             return;
         }
 
-        var radio_port = frame.get_valid_radio_port();
-        var nonce = frame.GetNonce();
+        var radioPort = frame.get_valid_radio_port();
 
-        if (!_knownIndexes.Contains(radio_port.MultiplexIndex))
-        {
-            _logger.LogWarning($"Val:{radio_port.MultiplexIndex}({radio_port.MultiplexIndex:b8}) Enc:{radio_port.Encrypted} Raw:{frame.MacSrcRadioPort[0]:b8}");
-            _knownIndexes.Add(radio_port.MultiplexIndex);
-        }
+        //if (!_knownIndexes.Contains(radioPort.MultiplexIndex))
+        //{
+        //    _logger.LogWarning($"Val:{radioPort.MultiplexIndex}({radioPort.MultiplexIndex:b8}) Enc:{radioPort.Encrypted} Raw:{frame.MacSrcRadioPort[0]:b8}");
+        //    _knownIndexes.Add(radioPort.MultiplexIndex);
+        //}
 
-        if (_radioStreams.TryGetValue(radio_port.MultiplexIndex, out var stream))
+        if (_radioStreams.TryGetValue(radioPort.MultiplexIndex, out var stream))
         {
-            stream.ProcessFrame(radio_port, frame);
+            Memory<byte> decryptedPayload;
+            if (radioPort.Encrypted)
+            {
+                var nonce = frame.GetNonce();
+                (var success, decryptedPayload) = _decryptor.AuthenticateAndDecrypt(nonce, frame.Payload);
+                if (!success)
+                {
+                    return;
+                }
+
+                _logger.LogWarning("DECODE SUCCESS");
+            }
+            else
+            {
+                decryptedPayload = frame.Payload.ToArray();
+            }
+
+            stream.ProcessFrame(decryptedPayload);
         }
     }
 }

@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using WiFiBroadcastNet.Crypto;
-using WiFiBroadcastNet.Fec;
 
 namespace WiFiBroadcastNet.RadioStreams;
 
-internal class SessionKeysRadioStream : RadioStream
+internal class SessionKeysRadioStream : IRadioStream
 {
     private readonly Decryptor _decryptor;
     private readonly ILogger _logger;
@@ -14,30 +13,31 @@ internal class SessionKeysRadioStream : RadioStream
     public SessionKeysRadioStream(
         Decryptor decryptor,
         ILogger logger)
-        : base(STREAM_INDEX_SESSION_KEY_PACKETS, new NullFec(), new NullCrypto())
     {
         _decryptor = decryptor;
         _logger = logger;
     }
 
-    public override void ProcessFrame(RadioPort radioPort, RxFrame frame)
+    public int Id => STREAM_INDEX_SESSION_KEY_PACKETS;
+
+    public void ProcessFrame(Memory<byte> decryptedPayload)
     {
         // _logger.LogDebug("Processing session key frame");
 
-        if (radioPort.Encrypted)
-        {
-            _logger.LogWarning("Cannot be session key packet - encryption flag set to true");
-            return;
-        }
+        //if (radioPort.Encrypted)
+        //{
+        //    _logger.LogWarning("Cannot be session key packet - encryption flag set to true");
+        //    return;
+        //}
 
-        var sessionKeyPacket = new SessionKeyPacket(frame);
+        var sessionKeyPacket = new SessionKeyPacket(decryptedPayload);
         if (!sessionKeyPacket.IsValid)
         {
-            _logger.LogWarning("Cannot be session key packet - size mismatch {ActualLen}", frame.Payload.Length);
+            _logger.LogWarning("Cannot be session key packet - size mismatch {ActualLen}", decryptedPayload.Length);
             return;
         }
 
-        var decrypt_res = _decryptor.onNewPacketSessionKeyData(sessionKeyPacket.sessionKeyNonce, sessionKeyPacket.sessionKeyData);
+        var decrypt_res = _decryptor.onNewPacketSessionKeyData(sessionKeyPacket.SessionKeyNonce, sessionKeyPacket.SessionKeyData);
 
         if (decrypt_res == DecryptorResult.SESSION_VALID_NEW)
         {

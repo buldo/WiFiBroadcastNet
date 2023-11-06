@@ -16,6 +16,7 @@ internal class Program
         var builder = Host.CreateApplicationBuilder(args);
         builder.Logging
             .SetMinimumLevel(LogLevel.Trace)
+            .AddFilter("Rtl8812auNet.*", LogLevel.Warning)
             .AddConsole();
         builder.Services.AddHostedService<WfbHost>();
 

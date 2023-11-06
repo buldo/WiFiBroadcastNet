@@ -10,8 +10,8 @@ public struct RadioPort
     {
         return new RadioPort
         {
-            Encrypted = (value & 0b1000_0000) !=0,
-            MultiplexIndex = (byte)(value & 0b0111_1111)
+            Encrypted = (value & 0b0000_0001) == 0b0000_0001,
+            MultiplexIndex = (byte)((value >> 1))
         };
     }
 }

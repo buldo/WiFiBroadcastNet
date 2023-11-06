@@ -7,8 +7,8 @@
 /// </summary>
 internal class KeyPairTxRx
 {
-    public Key key_1;
-    public Key key_2;
+    public Key key_1 = new();
+    public Key key_2 = new();
     Key get_tx_key(bool is_air)
     {
         return is_air ? key_1 : key_2;

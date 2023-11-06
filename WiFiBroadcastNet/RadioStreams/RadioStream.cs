@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using WiFiBroadcastNet.Crypto;
+﻿using WiFiBroadcastNet.Crypto;
 using WiFiBroadcastNet.Fec;
 
-namespace WiFiBroadcastNet;
+namespace WiFiBroadcastNet.RadioStreams;
 
-internal class RadioStream
+internal abstract class RadioStream
 {
     private readonly IFecProcessor _fecProcessor;
     private readonly ICryptoBlock _cryptoBlock;
@@ -30,4 +24,6 @@ internal class RadioStream
     {
 
     }
+
+    public abstract void ProcessFrame(RadioPort radioPort, RxFrame frame);
 }

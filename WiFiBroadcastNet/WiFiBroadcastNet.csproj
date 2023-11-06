@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="ASodium" Version="0.5.6" />
     <PackageReference Include="Bld.Libnl.Net" Version="0.0.0-alpha.0.39" />
-    <PackageReference Include="Bld.Rtl8812auNet" Version="1.0.0" />
+    <PackageReference Include="Bld.Rtl8812auNet" Version="1.1.0" />
     <PackageReference Include="Bld.WlanUtils" Version="0.2.0" />
     <PackageReference Include="SharpPcap" Version="6.2.5" />
     <PackageReference Include="SpaceWizards.Sodium" Version="0.2.1" />

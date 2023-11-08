@@ -36,6 +36,7 @@ public class WfbHost : IHostedService
         var devicesProvider = new AutoDevicesProvider(_driver);
         _iface = new WfbLink(
             devicesProvider,
+            CreateAccessors(loggerFactory),
             loggerFactory.CreateLogger<WfbLink>());
     }
 
@@ -50,5 +51,36 @@ public class WfbHost : IHostedService
     {
         //throw new NotImplementedException();
         return Task.CompletedTask;
+    }
+
+    private List<UserStream> CreateAccessors(ILoggerFactory factory)
+    {
+        return new List<UserStream>
+        {
+            new()
+            {
+                StreamId = RadioPorts.VIDEO_PRIMARY_RADIO_PORT,
+                IsFecEnabled = true,
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>()),
+            },
+            new()
+            {
+                StreamId = RadioPorts.VIDEO_SECONDARY_RADIO_PORT,
+                IsFecEnabled = true,
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>()),
+            },
+            new()
+            {
+                StreamId = RadioPorts.TELEMETRY_WIFIBROADCAST_TX_RADIO_PORT,
+                IsFecEnabled = false,
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>()),
+            },
+            new()
+            {
+                StreamId = RadioPorts.MANAGEMENT_RADIO_PORT_AIR_TX,
+                IsFecEnabled = false,
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>()),
+            },
+        };
     }
 }

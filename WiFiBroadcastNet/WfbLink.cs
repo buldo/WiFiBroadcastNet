@@ -17,6 +17,7 @@ public class WfbLink
 
     public WfbLink(
         IDevicesProvider devicesProvider,
+        List<UserStream> streamAccessor,
         ILogger<WfbLink> logger)
     {
         _logger = logger;
@@ -36,14 +37,20 @@ public class WfbLink
         var sessionKeyStream = new SessionKeysRadioStream(_decryptor, _logger);
         _radioStreams.Add(sessionKeyStream.Id, sessionKeyStream);
 
-        var stream04 = new FecStream(04);
-        _radioStreams.Add(stream04.Id, stream04);
+        foreach (var userStream in streamAccessor)
+        {
+            IRadioStream stream;
+            if (userStream.IsFecEnabled)
+            {
+                stream = new FecStream(userStream.StreamId, userStream.StreamAccessor);
+            }
+            else
+            {
+                stream = new NoFecStream(userStream.StreamId, userStream.StreamAccessor);
+            }
 
-        var stream10 = new FecStream(10);
-        _radioStreams.Add(stream10.Id, stream10);
-
-        var stream20 = new FecStream(20);
-        _radioStreams.Add(stream20.Id, stream20);
+            _radioStreams.Add(stream.Id, stream);
+        }
 
         // next session key in delta ms if packets are being fed
         //m_session_key_next_announce_ts = std::chrono::steady_clock::now();

@@ -1,9 +1,11 @@
 ﻿using System.Runtime.InteropServices;
+using OpenHd.Fec;
+using WiFiBroadcastNet.RadioStreams;
 
 // ReSharper disable InconsistentNaming
 #pragma warning disable IDE1006
 
-namespace WiFiBroadcastNet.RadioStreams;
+namespace WiFiBroadcastNet.Fec;
 
 // This encapsulates everything you need when working on a single FEC block on the receiver
 // for example, addFragment() or pullAvailablePrimaryFragments()
@@ -11,12 +13,10 @@ namespace WiFiBroadcastNet.RadioStreams;
 // or if it is ready for the FEC reconstruction step.
 class RxBlock
 {
-    private const int MAX_PAYLOAD_BEFORE_FEC = 1449;
-
     /// <summary>
     /// the block idx marks which block this element refers to
     /// </summary>
-    private readonly UInt64 blockIdx = 0;
+    private readonly ulong blockIdx = 0;
 
     /// <summary>
     /// for each fragment (via fragment_idx) store if it has been received yet
@@ -47,7 +47,7 @@ class RxBlock
     // @param maxNFragmentsPerBlock max number of primary and secondary fragments for this block.
     // you could just use MAX_TOTAL_FRAGMENTS_PER_BLOCK for that, but if your tx then uses (4:8) for example, you'd
     // allocate much more memory every time for a new RX block than needed.
-    public RxBlock(int maxNFragmentsPerBlock, UInt64 blockIdx1)
+    public RxBlock(int maxNFragmentsPerBlock, ulong blockIdx1)
     {
         blockIdx = blockIdx1;
         fragment_map = new List<bool>(maxNFragmentsPerBlock); //after creation of the RxBlock every f. is marked as unavailable
@@ -83,7 +83,7 @@ class RxBlock
     // returns true if we are "done with this block" aka all data has been already forwarded
     public bool allPrimaryFragmentsHaveBeenForwarded()
     {
-        if (m_n_primary_fragments_in_block == -1)return false;
+        if (m_n_primary_fragments_in_block == -1) return false;
         return nAlreadyForwardedPrimaryFragments == m_n_primary_fragments_in_block;
     }
 
@@ -122,7 +122,7 @@ class RxBlock
     // when using multiple RX cards
     public void addFragment(byte[] data, int dataLen)
     {
-        var header = MemoryMarshal.Read<FECPayloadHdr>(data.AsSpan(0, 8));
+        var header = FecPayloadHelper.CreateFromArray(data);
 
         //assert(!hasFragment(header.fragment_idx));
         //assert(header.block_idx == blockIdx);
@@ -151,7 +151,7 @@ class RxBlock
         {
             m_n_available_secondary_fragments++;
             //var payload_len_including_size = dataLen - sizeof(FECPayloadHdr) + sizeof(UInt16);
-            var payload_len_including_size = dataLen - 8 + sizeof(UInt16);
+            var payload_len_including_size = dataLen - 8 + sizeof(ushort);
             // all secondary fragments shall have the same size
             if (m_size_of_secondary_fragments == -1)
             {
@@ -172,7 +172,7 @@ class RxBlock
     // util to copy the packet size and payload (and not more)
     public void fragment_copy_payload(int fragment_idx, byte[] data, int dataLen)
     {
-        var buff = new byte[MAX_PAYLOAD_BEFORE_FEC];
+        var buff = new byte[FecConsts.MAX_PAYLOAD_BEFORE_FEC];
         blockBuffer[fragment_idx] = buff;
 
         //data.AsSpan(sizeof(FECPayloadHdr) - sizeof(UInt16))
@@ -185,11 +185,11 @@ class RxBlock
    * (Therefore, as long as you immediately forward all primary fragments returned here,everything happens in order)
    * @param discardMissingPackets : if true, gaps are ignored and fragments are forwarded even though this means the missing ones are irreversible lost
    * Be carefully with this param, use it only before you need to get rid of a block */
-    List<UInt16> pullAvailablePrimaryFragments(bool discardMissingPackets)
+    public List<ushort> pullAvailablePrimaryFragments(bool discardMissingPackets)
     {
         // note: when pulling the available fragments, we do not need to know how many primary fragments this block actually contains
-        List<UInt16> ret = new();
-        for (UInt16 i = (UInt16)nAlreadyForwardedPrimaryFragments; i < m_n_available_primary_fragments; i++)
+        List<ushort> ret = new();
+        for (ushort i = (ushort)nAlreadyForwardedPrimaryFragments; i < m_n_available_primary_fragments; i++)
         {
             if (fragment_map[i] == FecDecodeImpl.FRAGMENT_STATUS_UNAVAILABLE)
             {
@@ -206,11 +206,11 @@ class RxBlock
             ret.Add(i);
         }
         // make sure these indices won't be returned again
-        nAlreadyForwardedPrimaryFragments += (int) ret.Count;
+        nAlreadyForwardedPrimaryFragments += ret.Count;
         return ret;
     }
 
-    byte[] get_primary_fragment_data_p(int fragment_index)
+    public byte[] get_primary_fragment_data_p(int fragment_index)
     {
         //assert(fragment_map[fragment_index] == FRAGMENT_STATUS_AVAILABLE);
         //assert(m_n_primary_fragments_in_block != -1);
@@ -222,7 +222,7 @@ class RxBlock
         return blockBuffer[fragment_index];
     }
 
-    int get_primary_fragment_data_size(int fragment_index)
+    public int get_primary_fragment_data_size(int fragment_index)
     {
         //assert(fragment_map[fragment_index] == FRAGMENT_STATUS_AVAILABLE);
         //assert(m_n_primary_fragments_in_block != -1);
@@ -268,7 +268,7 @@ class RxBlock
     }
 
 
-    UInt64 getBlockIdx()
+    public ulong getBlockIdx()
     {
         return blockIdx;
     }
@@ -290,7 +290,7 @@ class RxBlock
         return m_n_primary_fragments_in_block - getNAvailableFragments();
     }
 
-    string get_missing_primary_packets_readable()
+    public string get_missing_primary_packets_readable()
     {
         var tmp = get_missing_primary_packets();
         if (tmp == null)

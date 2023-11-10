@@ -42,7 +42,7 @@ public class WfbLink
             IRadioStream stream;
             if (userStream.IsFecEnabled)
             {
-                stream = new FecStream(userStream.StreamId, userStream.StreamAccessor);
+                stream = new FecStream(userStream.StreamId, userStream.StreamAccessor, _logger);
             }
             else
             {

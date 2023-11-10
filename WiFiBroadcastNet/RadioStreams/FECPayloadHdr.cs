@@ -1,5 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
 namespace WiFiBroadcastNet.RadioStreams;
 
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 8)]
@@ -29,4 +31,12 @@ struct FECPayloadHdr
     /// This needs to be included during the fec encode / decode step !
     /// </summary>
     [FieldOffset(6)] public UInt16 data_size;
+}
+
+internal static class FecPayloadHelper
+{
+    public static FECPayloadHdr CreateFromArray(byte[] data)
+    {
+        return MemoryMarshal.Read<FECPayloadHdr>(data.AsSpan(0, 8));
+    }
 }

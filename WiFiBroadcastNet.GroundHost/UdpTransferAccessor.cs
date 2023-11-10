@@ -11,7 +11,7 @@ public class UdpTransferAccessor : IStreamAccessor
         _logger = logger;
     }
 
-    public void ProcessIncomingFrame(ReadOnlySpan<byte> payload)
+    public void ProcessIncomingFrame(Memory<byte> payload)
     {
         _logger.LogWarning("Log payload");
     }

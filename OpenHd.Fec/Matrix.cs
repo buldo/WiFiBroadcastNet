@@ -2,7 +2,13 @@
 
 public static class Matrix
 {
-
+    /// <summary>
+    /// takes a matrix and produces its inverse
+    /// </summary>
+    /// <param name="src">matrix</param>
+    /// <param name="k">The size of the matrix</param>
+    /// <returns>non-zero if singular</returns>
+    /// <remarks>Gauss-Jordan, adapted from Numerical Recipes in C</remarks>
     public static unsafe int invert_mat(byte* src, int k)
     {
         byte c;
@@ -106,7 +112,9 @@ public static class Matrix
                 c = Gf256Optimized.gf256_inverse(c);
                 pivot_row[icol] = 1;
                 for (ix = 0; ix < k; ix++)
-                    pivot_row[ix] = gf256_mul(c, pivot_row[ix]);
+                {
+                    pivot_row[ix] = Gf256Optimized.gf256_mul(c, pivot_row[ix]);
+                }
             }
 
             /*
@@ -164,19 +172,11 @@ public static class Matrix
         return error;
     }
 
-
-    static void Swap<T>(ref T lhs, ref T rhs)
+    private static void Swap<T>(ref T lhs, ref T rhs)
     {
         T temp;
         temp = lhs;
         lhs = rhs;
         rhs = temp;
-    }
-
-    private static unsafe byte gf256_mul(byte x, byte y)
-    {
-        byte ret;
-        Gf256FlatTable.mulrc256_flat_table(&ret, &x, y, 1);
-        return ret;
     }
 }

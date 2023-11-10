@@ -7,8 +7,9 @@ public static class Gf256Optimized
         return Tables.MOEPGF256_INV_TABLE[value];
     }
 
-    // computes dst[] = dst[] + c * src[]
-    // where '+', '*' are gf256 operations
+    /// <summary>
+    /// computes dst[] = dst[] + c * src[] where '+', '*' are gf256 operations
+    /// </summary>
     public static unsafe void gf256_madd_optimized(byte* dst, byte* src, byte c, int sz)
     {
         //#ifdef FEC_GF256_USE_X86_SSSE3
@@ -35,5 +36,12 @@ public static class Gf256Optimized
         //#else
         Gf256FlatTable.maddrc256_flat_table(dst, src, c, sz);
         //#endif
+    }
+
+    public static unsafe byte gf256_mul(byte x, byte y)
+    {
+        byte ret;
+        Gf256FlatTable.mulrc256_flat_table(&ret, &x, y, 1);
+        return ret;
     }
 }

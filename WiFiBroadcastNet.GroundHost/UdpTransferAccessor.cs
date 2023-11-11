@@ -1,18 +1,28 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Net;
+using System.Net.Sockets;
+using Microsoft.Extensions.Logging;
 
 namespace WiFiBroadcastNet.GroundHost;
 
 public class UdpTransferAccessor : IStreamAccessor
 {
     private readonly ILogger<UdpTransferAccessor> _logger;
+    private readonly IPEndPoint? _endPoint;
+    private readonly UdpClient _udpClient = new();
 
-    public UdpTransferAccessor(ILogger<UdpTransferAccessor> logger)
+    public UdpTransferAccessor(
+        ILogger<UdpTransferAccessor> logger,
+        IPEndPoint? endPoint)
     {
         _logger = logger;
+        _endPoint = endPoint;
     }
 
     public void ProcessIncomingFrame(Memory<byte> payload)
     {
-        _logger.LogWarning("Log payload. Size {Size}", payload.Length);
+        if (_endPoint != null)
+        {
+            _udpClient.Send(payload.Span, _endPoint);
+        }
     }
 }

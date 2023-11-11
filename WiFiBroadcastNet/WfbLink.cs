@@ -130,6 +130,7 @@ public class WfbLink
             }
             else
             {
+                // TODO: This is not work for key exchange. Need to put exchange to different place
                 var nonce = frame.GetNonce();
                 (var success, decryptedPayload) = _decryptor.Authenticate(nonce, frame.Payload);
                 if (!success)

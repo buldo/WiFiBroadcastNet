@@ -51,7 +51,7 @@ internal class FECDecoder
     }
 
     //// WARNING: Don't forget to register this callback !
-    public Action<byte[], int> mSendDecodedPayloadCallback;
+    public Action<byte[]> mSendDecodedPayloadCallback;
 
     //AvgCalculator m_fec_decode_time { };
 
@@ -121,7 +121,7 @@ internal class FECDecoder
             }
             else
             {
-                mSendDecodedPayloadCallback(data, data_size);
+                mSendDecodedPayloadCallback(data.Slice(0, data_size).ToArray());
                 //stats.count_bytes_forwarded += data_size;
             }
         }

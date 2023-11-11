@@ -215,7 +215,7 @@ class RxBlock
         return ret;
     }
 
-    public byte[] get_primary_fragment_data_p(int fragment_index)
+    public Span<byte> get_primary_fragment_data_p(int fragment_index)
     {
         //assert(fragment_map[fragment_index] == FRAGMENT_STATUS_AVAILABLE);
         //assert(m_n_primary_fragments_in_block != -1);
@@ -224,7 +224,7 @@ class RxBlock
 
 
         // return blockBuffer[fragment_index].data() + sizeof(uint16_t);
-        return blockBuffer[fragment_index];
+        return blockBuffer[fragment_index].AsSpan(2);
     }
 
     public int get_primary_fragment_data_size(int fragment_index)

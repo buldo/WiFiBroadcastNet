@@ -1,4 +1,5 @@
-﻿using Bld.WlanUtils;
+﻿using System.Net;
+using Bld.WlanUtils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -61,25 +62,27 @@ public class WfbHost : IHostedService
             {
                 StreamId = RadioPorts.VIDEO_PRIMARY_RADIO_PORT,
                 IsFecEnabled = true,
-                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>()),
+                StreamAccessor = new UdpTransferAccessor(
+                    factory.CreateLogger<UdpTransferAccessor>(),
+                    new IPEndPoint(IPAddress.Parse("192.168.88.183"), 5600)),
             },
             new()
             {
                 StreamId = RadioPorts.VIDEO_SECONDARY_RADIO_PORT,
                 IsFecEnabled = true,
-                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>()),
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
             },
             new()
             {
                 StreamId = RadioPorts.TELEMETRY_WIFIBROADCAST_TX_RADIO_PORT,
                 IsFecEnabled = false,
-                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>()),
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
             },
             new()
             {
                 StreamId = RadioPorts.MANAGEMENT_RADIO_PORT_AIR_TX,
                 IsFecEnabled = false,
-                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>()),
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
             },
         };
     }

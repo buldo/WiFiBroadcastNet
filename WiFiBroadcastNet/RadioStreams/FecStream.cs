@@ -20,7 +20,7 @@ public class FecStream : IRadioStream
         Id = id;
     }
 
-    private void MSendDecodedPayloadCallback(byte[] arg1, int arg2)
+    private void MSendDecodedPayloadCallback(byte[] arg1)
     {
         _userStream.ProcessIncomingFrame(arg1);
     }

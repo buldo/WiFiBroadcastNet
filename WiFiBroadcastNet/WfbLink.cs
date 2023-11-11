@@ -80,7 +80,7 @@ public class WfbLink
         }
     }
 
-    //private readonly HashSet<byte> _knownIndexes = new HashSet<byte>();
+    private readonly HashSet<(byte, bool)> _knownIndexes = new();
 
     private void ProcessRxFrame(RxFrame frame)
     {
@@ -103,14 +103,19 @@ public class WfbLink
 
         var radioPort = frame.get_valid_radio_port();
 
-        //if (!_knownIndexes.Contains(radioPort.MultiplexIndex))
-        //{
-        //    _logger.LogWarning($"Val:{radioPort.MultiplexIndex}({radioPort.MultiplexIndex:b8}) Enc:{radioPort.Encrypted} Raw:{frame.MacSrcRadioPort[0]:b8}");
-        //    _knownIndexes.Add(radioPort.MultiplexIndex);
-        //}
+        if (!_knownIndexes.Contains((radioPort.MultiplexIndex, radioPort.Encrypted)))
+        {
+            _logger.LogWarning($"Val:{radioPort.MultiplexIndex}({radioPort.MultiplexIndex:b8}) Enc:{radioPort.Encrypted} Raw:{frame.MacSrcRadioPort[0]:b8}");
+            _knownIndexes.Add((radioPort.MultiplexIndex, radioPort.Encrypted));
+        }
 
         if (_radioStreams.TryGetValue(radioPort.MultiplexIndex, out var stream))
         {
+            if (radioPort.MultiplexIndex == 10 && radioPort.Encrypted)
+            {
+
+            }
+
             Memory<byte> decryptedPayload;
             if (radioPort.Encrypted)
             {
@@ -121,11 +126,18 @@ public class WfbLink
                     return;
                 }
 
-                _logger.LogWarning("DECODE SUCCESS");
+                //_logger.LogWarning("DECODE SUCCESS");
             }
             else
             {
-                decryptedPayload = frame.Payload.ToArray();
+                var nonce = frame.GetNonce();
+                (var success, decryptedPayload) = _decryptor.Authenticate(nonce, frame.Payload);
+                if (!success)
+                {
+                    return;
+                }
+
+                //_logger.LogWarning("Auth SUCCESS");
             }
 
             stream.ProcessFrame(decryptedPayload);

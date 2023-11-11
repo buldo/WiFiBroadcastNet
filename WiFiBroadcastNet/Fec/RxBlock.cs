@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using OpenHd.Fec;
 using WiFiBroadcastNet.RadioStreams;
 
@@ -53,10 +54,14 @@ class RxBlock
         fragment_map = new List<bool>(maxNFragmentsPerBlock); //after creation of the RxBlock every f. is marked as unavailable
         for (int i = 0; i < maxNFragmentsPerBlock; i++)
         {
-            fragment_map[i] = FecDecodeImpl.FRAGMENT_STATUS_UNAVAILABLE;
+            fragment_map.Add(FecDecodeImpl.FRAGMENT_STATUS_UNAVAILABLE);
         }
 
         blockBuffer = new List<byte[]>(maxNFragmentsPerBlock);
+        for (int i = 0; i < maxNFragmentsPerBlock; i++)
+        {
+            blockBuffer.Add(new byte[FecConsts.MAX_PAYLOAD_BEFORE_FEC]);
+        }
 
         //assert(fragment_map.size() == blockBuffer.size());
     }
@@ -172,9 +177,8 @@ class RxBlock
     // util to copy the packet size and payload (and not more)
     public void fragment_copy_payload(int fragment_idx, byte[] data, int dataLen)
     {
-        var buff = new byte[FecConsts.MAX_PAYLOAD_BEFORE_FEC];
-        blockBuffer[fragment_idx] = buff;
-
+        var buff = blockBuffer[fragment_idx];
+        Debug.Assert(data.AsSpan(6..dataLen).Length <= buff.Length);
         //data.AsSpan(sizeof(FECPayloadHdr) - sizeof(UInt16))
         data.AsSpan(6..dataLen).CopyTo(buff);
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace WiFiBroadcastNet.Crypto;
 
@@ -58,23 +59,6 @@ internal class Decryptor
 
     public (bool IsSuccess, byte[]? Data) AuthenticateAndDecrypt(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> encryptedData)
     {
-        // TODO: This for mode when packets only signed but not encrypted
-        //if (!m_encrypt_data)
-        //{
-        //    const auto payload_size = encrypted_size - crypto_onetimeauth_BYTES;
-        //    assert(payload_size > 0);
-        //    const uint8_t* sign = encrypted + payload_size;
-        //    //const int res=crypto_auth_hmacsha256_verify(sign,msg,payload_size,session_key.data());
-        //    const auto sub_key = wb::create_onetimeauth_subkey(nonce, session_key);
-        //    const int res = crypto_onetimeauth_verify(sign, encrypted, payload_size, sub_key.data());
-        //    if (res != -1)
-        //    {
-        //        memcpy(dest, encrypted, payload_size);
-        //        return true;
-        //    }
-        //    return false;
-        //}
-
         var decryptedData = new byte[encryptedData.Length - Libsodium.crypto_aead_chacha20poly1305_ABYTES()];
 
         unsafe
@@ -97,4 +81,11 @@ internal class Decryptor
             }
         }
     }
+
+    public (bool IsSuccess, byte[]? Data) Authenticate(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> encryptedData)
+    {
+        // TODO: Now just trust everyone
+        return (true, encryptedData.Slice(0, encryptedData.Length - Libsodium.crypto_onetimeauth_BYTES()).ToArray());
+    }
+
 }

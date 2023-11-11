@@ -56,4 +56,9 @@ internal static class Libsodium
     {
         return SpaceWizards.Sodium.Interop.Libsodium.crypto_pwhash_ALG_DEFAULT;
     }
+
+    public static int crypto_onetimeauth_BYTES()
+    {
+        return (int)SpaceWizards.Sodium.Interop.Libsodium.crypto_onetimeauth_BYTES;
+    }
 }

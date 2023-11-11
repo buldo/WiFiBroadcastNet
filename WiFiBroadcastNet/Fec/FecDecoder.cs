@@ -13,42 +13,49 @@ internal class FECDecoder
 {
     private readonly ILogger _logger;
 
-    /**
-     * @param rx_queue_max_depth max size of rx queue - since in case of openhd, one frame is either one or two FEC blocks
-     *        we don't need that big of an rx queue
-     * @param maxNFragmentsPerBlock memory per block is pre-allocated, reduce this value if you know the encoder doesn't ever exceed a given
-     *        n of fragments per block
-     * @param enable_log_debug
-     */
+    // A value too high doesn't really give much benefit and increases memory usage
+    private readonly uint RX_QUEUE_MAX_SIZE;
+    private readonly int maxNFragmentsPerBlock;
+    private readonly bool m_enable_log_debug;
+
+    // since we also need to search this data structure, a std::queue is not enough.
+    // since we have an upper limit on the size of this dequeue, it is basically a searchable ring buffer
+    private Deque<RxBlock> rx_queue = new();
+    private UInt64 last_known_block = UInt64.MaxValue;  //id of last known block
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="rx_queue_max_depth">
+    /// max size of rx queue - since in case of openhd, one frame is either one or two FEC blocks
+    /// we don't need that big of an rx queue
+    /// </param>
+    /// <param name="maxNFragmentsPerBlock">
+    /// memory per block is pre-allocated, reduce this value if you know the encoder doesn't ever exceed a given
+    /// n of fragments per block
+    /// </param>
+    /// <param name="enable_log_debug"></param>
     public FECDecoder(
         ILogger logger,
         uint rx_queue_max_depth,
-        uint maxNFragmentsPerBlock = FecConsts.MAX_TOTAL_FRAGMENTS_PER_BLOCK,
+        int maxNFragmentsPerBlock = FecConsts.MAX_TOTAL_FRAGMENTS_PER_BLOCK,
         bool enable_log_debug = false)
     {
         _logger = logger;
         RX_QUEUE_MAX_SIZE = rx_queue_max_depth;
-        maxNFragmentsPerBlock = maxNFragmentsPerBlock;
+        this.maxNFragmentsPerBlock = maxNFragmentsPerBlock;
         m_enable_log_debug = enable_log_debug;
         //assert(rx_queue_max_depth < 20);
         //assert(rx_queue_max_depth >= 1);
     }
 
-//    FECDecoder(const FECDecoder &other) = delete;
-    //~FECDecoder() = default;
-    // data forwarded on this callback is always in-order but possibly with gaps
-    //typedef std::function<void(const uint8_t* payload, std::size_t payloadSize)> SEND_DECODED_PACKET;
-
     //// WARNING: Don't forget to register this callback !
     public Action<byte[], int> mSendDecodedPayloadCallback;
 
-    // A value too high doesn't really give much benefit and increases memory usage
-    public readonly uint RX_QUEUE_MAX_SIZE;
-    public readonly int maxNFragmentsPerBlock;
-    readonly bool m_enable_log_debug;
     //AvgCalculator m_fec_decode_time { };
 
-    static bool validate_packet_size(int data_len)
+    public static bool validate_packet_size(int data_len)
     {
         //if (data_len < sizeof(FECPayloadHdr))
         if (data_len < 8)
@@ -80,12 +87,6 @@ internal class FECDecoder
         process_with_rx_queue(header_p, data, data_len);
         return true;
     }
-
-
-    // since we also need to search this data structure, a std::queue is not enough.
-    // since we have an upper limit on the size of this dequeue, it is basically a searchable ring buffer
-    private Deque<RxBlock> rx_queue = new Deque<RxBlock>();
-    UInt64 last_known_block = UInt64.MaxValue;  //id of last known block
 
     /**
      * For this Block,

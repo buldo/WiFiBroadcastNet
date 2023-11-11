@@ -13,6 +13,6 @@ public class UdpTransferAccessor : IStreamAccessor
 
     public void ProcessIncomingFrame(Memory<byte> payload)
     {
-        _logger.LogWarning("Log payload");
+        _logger.LogWarning("Log payload. Size {Size}", payload.Length);
     }
 }

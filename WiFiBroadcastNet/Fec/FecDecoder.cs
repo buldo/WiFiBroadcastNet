@@ -258,6 +258,7 @@ internal class FECDecoder
             {
                 // apply fec for this block
                 //const auto before_encode = std::chrono::steady_clock::now();
+                block.reconstructAllMissingData();
                 //stats.count_fragments_recovered += block.reconstructAllMissingData();
                 //stats.count_blocks_recovered++;
                 //m_fec_decode_time.add(std::chrono::steady_clock::now() - before_encode);
@@ -301,6 +302,7 @@ internal class FECDecoder
                 else
                 {
                     // apply fec for this block
+                    block.reconstructAllMissingData();
                     //stats.count_fragments_recovered += block.reconstructAllMissingData();
                     //stats.count_blocks_recovered++;
                     forwardMissingPrimaryFragmentsIfAvailable(block);

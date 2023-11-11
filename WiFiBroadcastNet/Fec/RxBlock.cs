@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Buffers.Binary;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using OpenHd.Fec;
 using WiFiBroadcastNet.RadioStreams;
@@ -231,7 +232,7 @@ class RxBlock
         //assert(fragment_map[fragment_index] == FRAGMENT_STATUS_AVAILABLE);
         //assert(m_n_primary_fragments_in_block != -1);
         //assert(fragment_index < m_n_primary_fragments_in_block);
-        var len_p = blockBuffer[fragment_index].Length;
+        var len_p = BinaryPrimitives.ReadUInt16LittleEndian(blockBuffer[fragment_index].AsSpan(0,2));
         return len_p;
     }
 
@@ -248,7 +249,7 @@ class RxBlock
      * NOTE: Do not call this method unless it is needed
      * @return the n of reconstructed packets
      */
-    int reconstructAllMissingData()
+    public int reconstructAllMissingData()
     {
         //wifibroadcast::log::get_default()->debug("reconstructAllMissingData"<<nAvailablePrimaryFragments<<" "<<nAvailableSecondaryFragments<<" "<<fec.FEC_K<<"\n";
         // NOTE: FEC does only work if nPrimaryFragments+nSecondaryFragments>=FEC_K

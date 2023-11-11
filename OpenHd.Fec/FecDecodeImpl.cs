@@ -33,7 +33,7 @@ public static class FecDecodeImpl
                 indicesMissingPrimaryFragments.Add(idx);
             }
 
-            primaryFragmentP[idx] = blockBuffer[idx];
+            primaryFragmentP.Add(blockBuffer[idx]);
         }
 
         // find enough secondary fragments

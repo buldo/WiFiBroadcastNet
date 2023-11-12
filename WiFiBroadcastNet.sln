@@ -21,7 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OsdDemo", "OsdDemo\OsdDemo.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenHd.Fec", "OpenHd.Fec\OpenHd.Fec.csproj", "{134A7714-2B92-425E-A059-2AE7D874C906}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenHd.Fec.Tests", "OpenHd.Fec.Tests\OpenHd.Fec.Tests.csproj", "{B9A4627D-E13B-4715-BB48-CE55B01C5D27}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenHd.Fec.Tests", "OpenHd.Fec.Tests\OpenHd.Fec.Tests.csproj", "{B9A4627D-E13B-4715-BB48-CE55B01C5D27}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReceiverApp", "ReceiverApp\ReceiverApp.csproj", "{D561F9D8-5A8B-4AF9-8E5E-A9DCCBC3CB15}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,12 @@ Global
 		{B9A4627D-E13B-4715-BB48-CE55B01C5D27}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9A4627D-E13B-4715-BB48-CE55B01C5D27}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9A4627D-E13B-4715-BB48-CE55B01C5D27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D561F9D8-5A8B-4AF9-8E5E-A9DCCBC3CB15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D561F9D8-5A8B-4AF9-8E5E-A9DCCBC3CB15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D561F9D8-5A8B-4AF9-8E5E-A9DCCBC3CB15}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{D561F9D8-5A8B-4AF9-8E5E-A9DCCBC3CB15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D561F9D8-5A8B-4AF9-8E5E-A9DCCBC3CB15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D561F9D8-5A8B-4AF9-8E5E-A9DCCBC3CB15}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

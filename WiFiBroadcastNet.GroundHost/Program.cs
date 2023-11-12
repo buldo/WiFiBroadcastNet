@@ -33,7 +33,7 @@ public class WfbHost : IHostedService
 
     public WfbHost(ILoggerFactory loggerFactory)
     {
-        _driver = new WiFiDriver(loggerFactory);
+        _driver = new WiFiDriver(loggerFactory, true);
         var devicesProvider = new AutoDevicesProvider(_driver);
         _iface = new WfbLink(
             devicesProvider,

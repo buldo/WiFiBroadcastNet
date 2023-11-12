@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace WfbNet.AndroidHost;
+namespace ReceiverApp;
+
 public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
@@ -15,9 +16,10 @@ public static class MauiProgram
             });
 
 #if DEBUG
-		builder.Logging.AddDebug();
+        builder.Logging.AddDebug();//.SetMinimumLevel(LogLevel.Information);
 #endif
-
+        
         return builder.Build();
     }
 }
+

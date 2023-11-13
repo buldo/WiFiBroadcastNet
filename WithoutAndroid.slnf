@@ -4,8 +4,7 @@
     "projects": [
       "OpenHd.Fec.Tests\\OpenHd.Fec.Tests.csproj",
       "OpenHd.Fec\\OpenHd.Fec.csproj",
-      "Osd.WinUI\\Osd.WinUI (Package)\\Osd.WinUI (Package).wapproj",
-      "Osd.WinUI\\Osd.WinUI\\Osd.WinUI.csproj",
+      "Osd.WinUI\\Osd.WinUI.csproj",
       "OsdDemo\\OsdDemo.csproj",
       "PerformanceTester\\PerformanceTester.csproj",
       "SendSinglePacketDemo\\SendSinglePacketDemo.csproj",

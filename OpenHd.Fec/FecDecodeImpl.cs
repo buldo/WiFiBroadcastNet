@@ -93,8 +93,7 @@ public static class FecDecodeImpl
             indicesMissingPrimaryFragments.Count);
     }
 
-
-    private static void fec_decode(
+    internal static void fec_decode(
         int blockSize,
         List<byte[]> data_blocks,
         int nr_data_blocks,

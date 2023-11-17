@@ -7,4 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="OpenHd.Fec.Tests" />
+    </ItemGroup>
 </Project>

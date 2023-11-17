@@ -9,12 +9,12 @@ public class FecStream : IRadioStream
 {
     private readonly IStreamAccessor _userStream;
     private readonly ILogger _logger;
-    private readonly FECDecoder _fec;
+    private readonly FecDecoder _fec;
 
     public FecStream(int id, IStreamAccessor userStream, ILogger logger)
     {
         _fec = new(logger, 1, FecConsts.MAX_TOTAL_FRAGMENTS_PER_BLOCK, true);
-        _fec.mSendDecodedPayloadCallback = MSendDecodedPayloadCallback;
+        _fec._sendDecodedPayloadCallback = MSendDecodedPayloadCallback;
         _userStream = userStream;
         _logger = logger;
         Id = id;
@@ -29,7 +29,7 @@ public class FecStream : IRadioStream
 
     public void ProcessFrame(Memory<byte> decryptedPayload)
     {
-        if (!FECDecoder.validate_packet_size(decryptedPayload.Length))
+        if (!FecDecoder.validate_packet_size(decryptedPayload.Length))
         {
             _logger.LogDebug("invalid fec packet size {Size}", decryptedPayload.Length);
             return;

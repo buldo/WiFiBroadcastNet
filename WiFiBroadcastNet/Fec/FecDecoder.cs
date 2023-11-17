@@ -9,61 +9,61 @@ namespace WiFiBroadcastNet.Fec;
 // processes them such that the output is exactly (or as close as possible) to the
 // Input stream fed to FECEncoder.
 // Most importantly, it also handles re-ordering of packets and packet duplicates due to multiple rx cards
-internal class FECDecoder
+internal class FecDecoder
 {
     private readonly ILogger _logger;
 
     // A value too high doesn't really give much benefit and increases memory usage
-    private readonly uint RX_QUEUE_MAX_SIZE;
-    private readonly int maxNFragmentsPerBlock;
-    private readonly bool m_enable_log_debug;
+    private readonly uint _rxQueueMaxSize;
+    private readonly int _maxFragmentsPerBlock;
+    private readonly bool _mEnableLogDebug;
 
     // since we also need to search this data structure, a std::queue is not enough.
     // since we have an upper limit on the size of this dequeue, it is basically a searchable ring buffer
-    private Deque<RxBlock> rx_queue = new();
-    private UInt64 last_known_block = UInt64.MaxValue;  //id of last known block
+    private readonly Deque<RxBlock> _rxQueue = new();
+    private UInt64 _lastKnownBlock = UInt64.MaxValue;  //id of last known block
 
     /// <summary>
     ///
     /// </summary>
     /// <param name="logger"></param>
-    /// <param name="rx_queue_max_depth">
+    /// <param name="rxQueueMaxDepth">
     /// max size of rx queue - since in case of openhd, one frame is either one or two FEC blocks
     /// we don't need that big of an rx queue
     /// </param>
-    /// <param name="maxNFragmentsPerBlock">
+    /// <param name="maxFragmentsPerBlock">
     /// memory per block is pre-allocated, reduce this value if you know the encoder doesn't ever exceed a given
     /// n of fragments per block
     /// </param>
-    /// <param name="enable_log_debug"></param>
-    public FECDecoder(
+    /// <param name="enableLogDebug"></param>
+    public FecDecoder(
         ILogger logger,
-        uint rx_queue_max_depth,
-        int maxNFragmentsPerBlock = FecConsts.MAX_TOTAL_FRAGMENTS_PER_BLOCK,
-        bool enable_log_debug = false)
+        uint rxQueueMaxDepth,
+        int maxFragmentsPerBlock = FecConsts.MAX_TOTAL_FRAGMENTS_PER_BLOCK,
+        bool enableLogDebug = false)
     {
         _logger = logger;
-        RX_QUEUE_MAX_SIZE = rx_queue_max_depth;
-        this.maxNFragmentsPerBlock = maxNFragmentsPerBlock;
-        m_enable_log_debug = enable_log_debug;
+        _rxQueueMaxSize = rxQueueMaxDepth;
+        _maxFragmentsPerBlock = maxFragmentsPerBlock;
+        _mEnableLogDebug = enableLogDebug;
         //assert(rx_queue_max_depth < 20);
         //assert(rx_queue_max_depth >= 1);
     }
 
     //// WARNING: Don't forget to register this callback !
-    public Action<byte[]> mSendDecodedPayloadCallback;
+    public Action<byte[]> _sendDecodedPayloadCallback;
 
     //AvgCalculator m_fec_decode_time { };
 
-    public static bool validate_packet_size(int data_len)
+    public static bool validate_packet_size(int dataLen)
     {
         //if (data_len < sizeof(FECPayloadHdr))
-        if (data_len < 8)
+        if (dataLen < 8)
         {
             // packet is too small
             return false;
         }
-        if (data_len > FecConsts.MAX_PAYLOAD_BEFORE_FEC)
+        if (dataLen > FecConsts.MAX_PAYLOAD_BEFORE_FEC)
         {
             // packet is too big
             return false;
@@ -72,19 +72,19 @@ internal class FECDecoder
     }
 
     // process a valid packet
-    public bool process_valid_packet(byte[] data, int data_len)
+    public bool process_valid_packet(byte[] data, int dataLen)
     {
         //assert(validate_packet_size(data_len));
         // reconstruct the data layout
-        FECPayloadHdr header_p = FecPayloadHelper.CreateFromArray(data);
+        FECPayloadHdr headerP = FecPayloadHelper.CreateFromArray(data);
         /* const uint8_t* payload_p=data+sizeof(FECPayloadHdr);
          const int payload_size=data_len-sizeof(FECPayloadHdr);*/
-        if (header_p.fragment_idx >= maxNFragmentsPerBlock)
+        if (headerP.fragment_idx >= _maxFragmentsPerBlock)
         {
-            _logger.LogWarning($"invalid fragment_idx: {header_p.fragment_idx}");
+            _logger.LogWarning($"invalid fragment_idx: {headerP.fragment_idx}");
             return false;
         }
-        process_with_rx_queue(header_p, data, data_len);
+        process_with_rx_queue(headerP, data, dataLen);
         return true;
     }
 
@@ -95,50 +95,50 @@ internal class FECDecoder
      * @param discardMissingPackets : if true, gaps are ignored and fragments are forwarded even though this means the missing ones are irreversible lost
      * Be carefully with this param, use it only before you need to get rid of a block
      */
-    void forwardMissingPrimaryFragmentsIfAvailable(RxBlock block, bool discardMissingPackets = false)
+    void ForwardMissingPrimaryFragmentsIfAvailable(RxBlock block, bool discardMissingPackets = false)
     {
         //assert(mSendDecodedPayloadCallback);
         // TODO remove me
         if (discardMissingPackets)
         {
-            if (m_enable_log_debug)
+            if (_mEnableLogDebug)
             {
                 //wifibroadcast::log::get_default()->warn("Forwarding block that is not yet fully finished: {} total: {} available: {} missing: {}",
                 //    block.getBlockIdx(), block.get_n_primary_fragments(), block.getNAvailableFragments(), block.get_missing_primary_packets_readable());
             }
         }
-        var indices = block.pullAvailablePrimaryFragments(discardMissingPackets);
+        var indices = block.PullAvailablePrimaryFragments(discardMissingPackets);
 
         foreach (var primaryFragmentIndex in indices)
         {
             var data = block.get_primary_fragment_data_p(primaryFragmentIndex);
-            int data_size = block.get_primary_fragment_data_size(primaryFragmentIndex);
-            if (data_size > FecConsts.FEC_PACKET_MAX_PAYLOAD_SIZE || data_size <= 0)
+            int dataSize = block.get_primary_fragment_data_size(primaryFragmentIndex);
+            if (dataSize > FecConsts.FEC_PACKET_MAX_PAYLOAD_SIZE || dataSize <= 0)
             {
                 _logger.LogWarning(
                     "corrupted packet on FECDecoder out ({BlockIdx}:{PrimaryFragmentIndex}) : {DataSize}B",
-                    block.getBlockIdx(), primaryFragmentIndex, data_size);
+                    block.GetBlockIdx(), primaryFragmentIndex, dataSize);
             }
             else
             {
-                mSendDecodedPayloadCallback(data.Slice(0, data_size).ToArray());
+                _sendDecodedPayloadCallback(data.Slice(0, dataSize).ToArray());
                 //stats.count_bytes_forwarded += data_size;
             }
         }
     }
 
     // also increase lost block count if block is not fully recovered
-    void rxQueuePopFront()
+    void RxQueuePopFront()
     {
-        var front = rx_queue.RemoveFromFront();
+        var front = _rxQueue.RemoveFromFront();
         //assert(rx_queue.front() != nullptr);
-        if (!front.allPrimaryFragmentsHaveBeenForwarded())
+        if (!front.AllPrimaryFragmentsHaveBeenForwarded())
         {
             //stats.count_blocks_lost++;
-            if (m_enable_log_debug)
+            if (_mEnableLogDebug)
             {
                 //auto & block = *rx_queue.front();
-                _logger.LogDebug("Removing block {BlockIdx} {MissingPrimaryPackets}", front.getBlockIdx(), front.get_missing_primary_packets_readable());
+                _logger.LogDebug("Removing block {BlockIdx} {MissingPrimaryPackets}", front.GetBlockIdx(), front.get_missing_primary_packets_readable());
             }
         }
     }
@@ -146,14 +146,14 @@ internal class FECDecoder
     // create a new RxBlock for the specified block_idx and push it into the queue
     // NOTE: Checks first if this operation would increase the size of the queue over its max capacity
     // In this case, the only solution is to remove the oldest block before adding the new one
-    void rxRingCreateNewSafe(UInt64 blockIdx)
+    void RxRingCreateNewSafe(UInt64 blockIdx)
     {
         // check: make sure to always put blocks into the queue in order !
-        if (rx_queue.Count != 0)
+        if (_rxQueue.Count != 0)
         {
             // the newest block in the queue should be equal to block_idx -1
             // but it must not ?!
-            if (rx_queue.Last().getBlockIdx() != (blockIdx - 1))
+            if (_rxQueue.Last().GetBlockIdx() != (blockIdx - 1))
             {
                 // If we land here, one or more full blocks are missing, which can happen on bad rx links
                 //wifibroadcast::log::get_default()->debug("In queue: {} But new: {}",rx_queue.back()->getBlockIdx(),blockIdx);
@@ -161,9 +161,9 @@ internal class FECDecoder
             //assert(rx_queue.back()->getBlockIdx() == (blockIdx - 1));
         }
         // we can return early if this operation doesn't exceed the size limit
-        if (rx_queue.Count < RX_QUEUE_MAX_SIZE)
+        if (_rxQueue.Count < _rxQueueMaxSize)
         {
-            rx_queue.AddToBack(new RxBlock(maxNFragmentsPerBlock, blockIdx));
+            _rxQueue.AddToBack(new RxBlock(_maxFragmentsPerBlock, blockIdx));
             //stats.count_blocks_total++;
             return;
         }
@@ -174,60 +174,60 @@ internal class FECDecoder
         //2. Reduce packet injection speed or try to unify RX hardware.
 
         // forward remaining data for the (oldest) block, since we need to get rid of it
-        var oldestBlock = rx_queue.First();
-        forwardMissingPrimaryFragmentsIfAvailable(oldestBlock, true);
+        var oldestBlock = _rxQueue.First();
+        ForwardMissingPrimaryFragmentsIfAvailable(oldestBlock, true);
         // and remove the block once done with it
-        rxQueuePopFront();
+        RxQueuePopFront();
 
         // now we are guaranteed to have space for one new block
-        rx_queue.AddToBack(new RxBlock(maxNFragmentsPerBlock, blockIdx));
+        _rxQueue.AddToBack(new RxBlock(_maxFragmentsPerBlock, blockIdx));
         //stats.count_blocks_total++;
     }
 
     // If block is already known and not in the queue anymore return nullptr
     // else if block is inside the ring return pointer to it
     // and if it is not inside the ring add as many blocks as needed, then return pointer to it
-    RxBlock? rxRingFindCreateBlockByIdx(UInt64 blockIdx)
+    RxBlock? RxRingFindCreateBlockByIdx(UInt64 blockIdx)
     {
-        var found = rx_queue.FirstOrDefault(b => b.getBlockIdx() == blockIdx);
+        var found = _rxQueue.FirstOrDefault(b => b.GetBlockIdx() == blockIdx);
         if (found != null)
         {
             return found;
         }
         // check if block is already known and not in the ring then it is already processed
-        if (last_known_block != UInt64.MaxValue  && blockIdx <= last_known_block)
+        if (_lastKnownBlock != UInt64.MaxValue  && blockIdx <= _lastKnownBlock)
         {
             return null;
         }
 
         // don't forget to increase the lost blocks counter if we do not add blocks here due to no space in the rx queue
         // (can happen easily if the rx queue has a size of 1)
-        var n_needed_new_blocks = last_known_block != UInt64.MaxValue ? blockIdx - last_known_block : 1;
-        if (n_needed_new_blocks > RX_QUEUE_MAX_SIZE)
+        var nNeededNewBlocks = _lastKnownBlock != UInt64.MaxValue ? blockIdx - _lastKnownBlock : 1;
+        if (nNeededNewBlocks > _rxQueueMaxSize)
         {
-            if (m_enable_log_debug)
+            if (_mEnableLogDebug)
             {
-                _logger.LogDebug("Need {CntNeededNewBlocks} blocks, exceeds {RX_QUEUE_MAX_SIZE}", n_needed_new_blocks, RX_QUEUE_MAX_SIZE);
+                _logger.LogDebug("Need {CntNeededNewBlocks} blocks, exceeds {RX_QUEUE_MAX_SIZE}", nNeededNewBlocks, _rxQueueMaxSize);
             }
             //stats.count_blocks_lost += n_needed_new_blocks - RX_QUEUE_MAX_SIZE;
         }
         // add as many blocks as we need ( the rx ring mustn't have any gaps between the block indices).
         // but there is no point in adding more blocks than RX_RING_SIZE
-        UInt64 new_blocks = UInt64.Min(n_needed_new_blocks, RX_QUEUE_MAX_SIZE);
-        last_known_block = blockIdx;
+        UInt64 newBlocks = UInt64.Min(nNeededNewBlocks, _rxQueueMaxSize);
+        _lastKnownBlock = blockIdx;
 
-        for (UInt64 i = 0; i < new_blocks; i++)
+        for (UInt64 i = 0; i < newBlocks; i++)
         {
-            rxRingCreateNewSafe(blockIdx + i + 1 - new_blocks);
+            RxRingCreateNewSafe(blockIdx + i + 1 - newBlocks);
         }
         // the new block we've added is now the most recently added element (and since we always push to the back, the "back()" element)
         //assert(rx_queue.back()->getBlockIdx() == blockIdx);
-        return rx_queue.Last();
+        return _rxQueue.Last();
     }
 
-    void process_with_rx_queue(FECPayloadHdr header, byte[] data, int data_size)
+    void process_with_rx_queue(FECPayloadHdr header, byte[] data, int dataSize)
     {
-        var blockP = rxRingFindCreateBlockByIdx(header.block_idx);
+        var blockP = RxRingFindCreateBlockByIdx(header.block_idx);
         //ignore already processed blocks
         if (blockP == null)
         {
@@ -236,29 +236,29 @@ internal class FECDecoder
         // cannot be nullptr
         RxBlock block = blockP;
         // ignore already processed fragments
-        if (block.hasFragment(header.fragment_idx))
+        if (block.HasFragment(header.fragment_idx))
         {
             return;
         }
-        block.addFragment(data, data_size);
-        if (block == rx_queue.First())
+        block.AddFragment(data, dataSize);
+        if (block == _rxQueue.First())
         {
             //wifibroadcast::log::get_default()->debug("In front\n";
             // we are in the front of the queue (e.g. at the oldest block)
             // forward packets until the first gap
-            forwardMissingPrimaryFragmentsIfAvailable(block);
+            ForwardMissingPrimaryFragmentsIfAvailable(block);
             // We are done with this block if either all fragments have been forwarded or it can be recovered
-            if (block.allPrimaryFragmentsHaveBeenForwarded())
+            if (block.AllPrimaryFragmentsHaveBeenForwarded())
             {
                 // remove block when done with it
-                rxQueuePopFront();
+                RxQueuePopFront();
                 return;
             }
-            if (block.allPrimaryFragmentsCanBeRecovered())
+            if (block.AllPrimaryFragmentsCanBeRecovered())
             {
                 // apply fec for this block
                 //const auto before_encode = std::chrono::steady_clock::now();
-                block.reconstructAllMissingData();
+                block.ReconstructAllMissingData();
                 //stats.count_fragments_recovered += block.reconstructAllMissingData();
                 //stats.count_blocks_recovered++;
                 //m_fec_decode_time.add(std::chrono::steady_clock::now() - before_encode);
@@ -268,10 +268,10 @@ internal class FECDecoder
                 //    stats.curr_fec_decode_time = m_fec_decode_time.getMinMaxAvg();
                 //    m_fec_decode_time.reset();
                 //}
-                forwardMissingPrimaryFragmentsIfAvailable(block);
+                ForwardMissingPrimaryFragmentsIfAvailable(block);
                 //assert(block.allPrimaryFragmentsHaveBeenForwarded());
                 // remove block when done with it
-                rxQueuePopFront();
+                RxQueuePopFront();
                 return;
             }
             return;
@@ -281,59 +281,42 @@ internal class FECDecoder
             //wifibroadcast::log::get_default()->debug("Not in front\n";
             // we are not in the front of the queue but somewhere else
             // If this block can be fully recovered or all primary fragments are available this triggers a flush
-            if (block.allPrimaryFragmentsAreAvailable() || block.allPrimaryFragmentsCanBeRecovered())
+            if (block.AllPrimaryFragmentsAreAvailable() || block.AllPrimaryFragmentsCanBeRecovered())
             {
                 // send all queued packets in all unfinished blocks before and remove them
-                if (m_enable_log_debug)
+                if (_mEnableLogDebug)
                 {
-                    _logger.LogDebug("Block {BlockIdx} triggered a flush", block.getBlockIdx());
+                    _logger.LogDebug("Block {BlockIdx} triggered a flush", block.GetBlockIdx());
                 }
-                while (block != rx_queue.First())
+                while (block != _rxQueue.First())
                 {
-                    forwardMissingPrimaryFragmentsIfAvailable(rx_queue.First(), true);
-                    rxQueuePopFront();
+                    ForwardMissingPrimaryFragmentsIfAvailable(_rxQueue.First(), true);
+                    RxQueuePopFront();
                 }
                 // then process the block who is fully recoverable or has no gaps in the primary fragments
-                if (block.allPrimaryFragmentsAreAvailable())
+                if (block.AllPrimaryFragmentsAreAvailable())
                 {
-                    forwardMissingPrimaryFragmentsIfAvailable(block);
+                    ForwardMissingPrimaryFragmentsIfAvailable(block);
                     //assert(block.allPrimaryFragmentsHaveBeenForwarded());
                 }
                 else
                 {
                     // apply fec for this block
-                    block.reconstructAllMissingData();
+                    block.ReconstructAllMissingData();
                     //stats.count_fragments_recovered += block.reconstructAllMissingData();
                     //stats.count_blocks_recovered++;
-                    forwardMissingPrimaryFragmentsIfAvailable(block);
+                    ForwardMissingPrimaryFragmentsIfAvailable(block);
                     //assert(block.allPrimaryFragmentsHaveBeenForwarded());
                 }
                 // remove block
-                rxQueuePopFront();
+                RxQueuePopFront();
             }
         }
     }
 
-    //  public:
-    //// matches FECDecoder
-    //struct FECRxStats
-    //  {
-    //      // total block count
-    //      uint64_t count_blocks_total = 0;
-    //      // a block counts as "lost" if it was removed before being fully received or recovered
-    //      uint64_t count_blocks_lost = 0;
-    //      // a block counts as "recovered" if it was recovered using FEC packets
-    //      uint64_t count_blocks_recovered = 0;
-    //      // n of primary fragments that were reconstructed during the recovery process of a block
-    //      uint64_t count_fragments_recovered = 0;
-    //      // n of forwarded bytes
-    //      uint64_t count_bytes_forwarded = 0;
-    //      MinMaxAvg<std::chrono::nanoseconds> curr_fec_decode_time { };
-    //  };
-    //  FECRxStats stats { };
     void reset_rx_queue()
     {
-        rx_queue.Clear();
-        last_known_block = UInt64.MaxValue;
+        _rxQueue.Clear();
+        _lastKnownBlock = UInt64.MaxValue;
     }
 }

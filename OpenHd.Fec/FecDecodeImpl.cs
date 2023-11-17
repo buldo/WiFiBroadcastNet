@@ -16,7 +16,8 @@ public static class FecDecodeImpl
     /// values from [0,nPrimaryFragments[ are treated as primary fragments, values from [nPrimaryFragments,size[ are treated as secondary fragments.
     /// </param>
     /// <returns>indices of reconstructed primary fragments</returns>
-    public static List<int> fecDecode(int fragmentSize,
+    public static List<int> fecDecode(
+        int fragmentSize,
         List<byte[]> blockBuffer,
         int nPrimaryFragments,
         List<bool> fragmentStatusList)
@@ -54,7 +55,8 @@ public static class FecDecodeImpl
         // assert if fecDecode is called too late (e.g. more secondary fragments than needed for fec
         //assert(indicesMissingPrimaryFragments.size() == secondaryFragmentP.size());
         // do fec step
-        fec_decode2(fragmentSize,
+        fec_decode2(
+            fragmentSize,
             primaryFragmentP,
             indicesMissingPrimaryFragments,
             secondaryFragmentP,

@@ -9,5 +9,6 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="OpenHd.Fec.Tests" />
+        <InternalsVisibleTo Include="OpenHd.Fec.Benchmarks" />
     </ItemGroup>
 </Project>

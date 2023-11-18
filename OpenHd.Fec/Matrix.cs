@@ -9,12 +9,8 @@ public static class Matrix
     /// <param name="k">The size of the matrix</param>
     /// <returns>non-zero if singular</returns>
     /// <remarks>Gauss-Jordan, adapted from Numerical Recipes in C</remarks>
-    public static unsafe int invert_mat(byte* src, int k)
+    public static int invert_mat(Span<byte> src, int k)
     {
-        byte c;
-        byte* p;
-        int irow, icol, row, col, i, ix;
-
         int error = 1;
         int[] indxc = new int[k];
         int[] indxr = new int[k];
@@ -26,17 +22,19 @@ public static class Matrix
         /*
          * ipiv marks elements already used as pivots.
          */
-        for (i = 0; i < k; i++)
-            ipiv[i] = 0;
+        //for (int i = 0; i < k; i++)
+        //{
+        //    ipiv[i] = 0;
+        //}
 
-        for (col = 0; col < k; col++)
+        for (int col = 0; col < k; col++)
         {
-            byte* pivot_row;
             /*
              * Zeroing column 'col', look for a non-zero element.
              * First try on the diagonal, if it fails, look elsewhere.
              */
-            irow = icol = -1;
+            int icol;
+            var irow = icol = -1;
             if (ipiv[col] != 1 && src[col * k + col] != 0)
             {
                 irow = col;
@@ -44,11 +42,11 @@ public static class Matrix
                 goto found_piv;
             }
 
-            for (row = 0; row < k; row++)
+            for (int row = 0; row < k; row++)
             {
                 if (ipiv[row] != 1)
                 {
-                    for (ix = 0; ix < k; ix++)
+                    for (var ix = 0; ix < k; ix++)
                     {
                         //DEB(pivloops++;)
                         if (ipiv[ix] == 0)
@@ -85,7 +83,7 @@ public static class Matrix
              */
             if (irow != icol)
             {
-                for (ix = 0; ix < k; ix++)
+                for (var ix = 0; ix < k; ix++)
                 {
                     Swap(ref src[irow * k + ix], ref src[icol * k + ix]);
                 }
@@ -93,8 +91,8 @@ public static class Matrix
 
             indxr[col] = irow;
             indxc[col] = icol;
-            pivot_row = &src[icol * k];
-            c = pivot_row[icol];
+            var pivot_row = src.Slice(icol * k, k);
+            var c = pivot_row[icol];
             if (c == 0)
             {
                 Console.WriteLine("singular matrix 2");
@@ -111,7 +109,7 @@ public static class Matrix
                 //DEB(pivswaps++;)
                 c = Gf256Optimized.gf256_inverse(c);
                 pivot_row[icol] = 1;
-                for (ix = 0; ix < k; ix++)
+                for (var ix = 0; ix < k; ix++)
                 {
                     pivot_row[ix] = Gf256Optimized.gf256_mul(c, pivot_row[ix]);
                 }
@@ -126,21 +124,18 @@ public static class Matrix
              */
             id_row[icol] = 1;
 
-            int cmpResult = 0;
-            fixed (byte* id_rowPtr = id_row)
-            {
-                cmpResult = MemUtils.memcmp(pivot_row, id_rowPtr, k * sizeof(byte));
-            }
+            var cmpResult = pivot_row.SequenceEqual(id_row);
 
-            if (cmpResult != 0)
+            if (!cmpResult)
             {
-                for (p = src, ix = 0; ix < k; ix++, p += k)
+                for (var ix = 0; ix < k; ix++ )
                 {
+                    var p  = src.Slice(k * ix, k);
                     if (ix != icol)
                     {
                         c = p[icol];
                         p[icol] = 0;
-                        Gf256Optimized.gf256_madd_optimized(p, pivot_row, c, k);
+                        Gf256Optimized.gf256_madd_optimized(p, pivot_row, c);
                     }
                 }
             }
@@ -148,7 +143,7 @@ public static class Matrix
             id_row[icol] = 0;
         } /* done all columns */
 
-        for (col = k - 1; col >= 0; col--)
+        for (int col = k - 1; col >= 0; col--)
         {
             if (indxr[col] < 0 || indxr[col] >= k)
             {
@@ -160,7 +155,7 @@ public static class Matrix
             }
             else if (indxr[col] != indxc[col])
             {
-                for (row = 0; row < k; row++)
+                for (int row = 0; row < k; row++)
                 {
                     Swap(ref src[row * k + indxr[col]], ref src[row * k + indxc[col]]);
                 }

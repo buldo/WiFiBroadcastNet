@@ -4,7 +4,7 @@ public class MatrixTests
 {
 
     [Test]
-    public unsafe void InvertTest1()
+    public void InvertTest1()
     {
         byte[] original =
         {
@@ -13,10 +13,7 @@ public class MatrixTests
             20, 17, 15
         };
 
-        fixed (byte* ptr = original)
-        {
-            Matrix.invert_mat(ptr, 3);
-        }
+        Matrix.invert_mat(original, 3);
 
         byte[] expected =
         {

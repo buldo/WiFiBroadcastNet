@@ -154,7 +154,7 @@ public static class FecDecodeImpl
     /// <summary>
     /// Resolves reduced system. Constructs "mini" encoding matrix, inverts it, and multiply reduced vector by it.
     /// </summary>
-    private static unsafe void resolve(
+    private static void resolve(
         List<byte[]> data_blocks,
         List<byte[]> fec_blocks,
         List<int> fec_block_nos,
@@ -183,10 +183,7 @@ public static class FecDecodeImpl
             }
         }
 
-        fixed (byte* matrixPtr = matrix)
-        {
-            r = Matrix.invert_mat(matrixPtr, nr_fec_blocks);
-        }
+        r = Matrix.invert_mat(matrix, nr_fec_blocks);
 
         //if (r)
         //{

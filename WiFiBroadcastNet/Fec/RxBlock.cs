@@ -256,8 +256,7 @@ class RxBlock
         //assert(getNAvailableFragments() >= m_n_primary_fragments_in_block);
         // also do not reconstruct if reconstruction is not needed
         // const int nMissingPrimaryFragments = m_n_primary_fragments_in_block- m_n_available_primary_fragments;
-        var recoveredFragmentIndices = FecDecodeImpl.fecDecode(_sizeOfSecondaryFragments, _blockBuffer,
-                                                  _primaryFragmentsInBlock, _fragmentMap);
+        var recoveredFragmentIndices = FecDecodeImpl.fecDecode(_blockBuffer, _primaryFragmentsInBlock, _fragmentMap);
         // now mark them as available
         foreach (var idx in recoveredFragmentIndices)
         {

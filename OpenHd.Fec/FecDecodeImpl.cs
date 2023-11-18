@@ -8,7 +8,6 @@ public static class FecDecodeImpl
     public const bool FRAGMENT_STATUS_UNAVAILABLE = false;
     public const bool FRAGMENT_STATUS_AVAILABLE = true;
 
-    /// <param name="fragmentSize">size of each fragment</param>
     /// <param name="blockBuffer">blockBuffer (big) data buffer. The nth element is to be treated as the nth fragment of the block, either as primary or secondary fragment.</param>
     /// <param name="nPrimaryFragments">n of primary fragments used during encode step</param>
     /// <param name="fragmentStatusList">
@@ -17,7 +16,6 @@ public static class FecDecodeImpl
     /// </param>
     /// <returns>indices of reconstructed primary fragments</returns>
     public static List<int> fecDecode(
-        int fragmentSize,
         List<byte[]> blockBuffer,
         int nPrimaryFragments,
         List<bool> fragmentStatusList)
@@ -56,7 +54,6 @@ public static class FecDecodeImpl
         //assert(indicesMissingPrimaryFragments.size() == secondaryFragmentP.size());
         // do fec step
         fec_decode2(
-            fragmentSize,
             primaryFragmentP,
             indicesMissingPrimaryFragments,
             secondaryFragmentP,
@@ -64,7 +61,7 @@ public static class FecDecodeImpl
         return indicesMissingPrimaryFragments;
     }
 
-    private static void fec_decode2(int fragmentSize,
+    private static void fec_decode2(
         List<byte[]> primaryFragments,
         List<int> indicesMissingPrimaryFragments,
         List<byte[]> secondaryFragmentsReceived,
@@ -84,7 +81,6 @@ public static class FecDecodeImpl
         //assert(indicesMissingPrimaryFragments.size() == secondaryFragmentsReceived.size());
         //assert(secondaryFragmentsReceived.size() == indicesOfSecondaryFragmentsReceived.size());
         fec_decode(
-            fragmentSize,
             primaryFragments,
             primaryFragments.Count,
             secondaryFragmentsReceived,
@@ -94,7 +90,6 @@ public static class FecDecodeImpl
     }
 
     internal static void fec_decode(
-        int blockSize,
         List<byte[]> data_blocks,
         int nr_data_blocks,
         List<byte[]> fec_blocks,
@@ -103,7 +98,6 @@ public static class FecDecodeImpl
         int nr_fec_blocks)
     {
         reduce(
-            blockSize,
             data_blocks,
             nr_data_blocks,
             fec_blocks,
@@ -112,7 +106,6 @@ public static class FecDecodeImpl
             nr_fec_blocks);
         //
         resolve(
-            blockSize,
             data_blocks,
             fec_blocks,
             fec_block_nos,
@@ -126,8 +119,7 @@ public static class FecDecodeImpl
  * (with size being number of blocks lost, rather than number of data blocks
  * + fec)
  */
-    private static unsafe void reduce(
-        int blockSize,
+    private static void reduce(
         List<byte[]> data_blocks,
         int nr_data_blocks,
         List<byte[]> fec_blocks,
@@ -136,11 +128,10 @@ public static class FecDecodeImpl
         int nr_fec_blocks)
     {
         int erasedIdx = 0;
-        int col;
 
         /* First we reduce the code vector by substracting all known elements
          * (non-erased data packets) */
-        for (col = 0; col < nr_data_blocks; col++)
+        for (int col = 0; col < nr_data_blocks; col++)
         {
             if (erasedIdx < nr_fec_blocks && erased_blocks[erasedIdx] == col)
             {
@@ -148,16 +139,10 @@ public static class FecDecodeImpl
             }
             else
             {
-                var src = data_blocks[col];
-                int j;
-                for (j = 0; j < nr_fec_blocks; j++)
+                for (int j = 0; j < nr_fec_blocks; j++)
                 {
                     int blno = fec_block_nos[j];
-                    fixed (byte* fec_blocksPtr = fec_blocks[j])
-                    fixed (byte* srcPtr = src)
-                    {
-                        Gf256Optimized.gf256_madd_optimized(fec_blocksPtr, srcPtr, Gf256Optimized.gf256_inverse(blno ^ col ^ 128), blockSize);
-                    }
+                    Gf256Optimized.gf256_madd_optimized(fec_blocks[j], data_blocks[col], Gf256Optimized.gf256_inverse(blno ^ col ^ 128));
                 }
             }
         }
@@ -170,7 +155,6 @@ public static class FecDecodeImpl
     /// Resolves reduced system. Constructs "mini" encoding matrix, inverts it, and multiply reduced vector by it.
     /// </summary>
     private static unsafe void resolve(
-        int blockSize,
         List<byte[]> data_blocks,
         List<byte[]> fec_blocks,
         List<int> fec_block_nos,
@@ -225,21 +209,11 @@ public static class FecDecodeImpl
             int col;
             var target = data_blocks[erased_blocks[row]];
 
-            fixed (byte* targetPtr = target)
-            fixed (byte* fec_blockPtr = fec_blocks[0])
-            {
-                Gf256Optimized.gf256_mul_optimized(targetPtr, fec_blockPtr, matrix[ptr++], blockSize);
-            }
+            Gf256Optimized.gf256_mul_optimized(target, fec_blocks[0], matrix[ptr++]);
 
-            fixed (byte* targetPtr = target)
+            for (col = 1; col < nr_fec_blocks; col++, ptr++)
             {
-                for (col = 1; col < nr_fec_blocks; col++, ptr++)
-                {
-                    fixed (byte* fec_blockPtr = fec_blocks[col])
-                    {
-                        Gf256Optimized.gf256_madd_optimized(targetPtr, fec_blockPtr, matrix[ptr], blockSize);
-                    }
-                }
+                Gf256Optimized.gf256_madd_optimized(target, fec_blocks[col], matrix[ptr]);
             }
         }
     }

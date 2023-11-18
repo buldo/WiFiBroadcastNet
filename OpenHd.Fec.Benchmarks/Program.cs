@@ -11,6 +11,16 @@ namespace OpenHd.Fec.Benchmarks;
 // |----------- |---------:|--------:|--------:|
 // | ComputeFec | 159.4 us | 1.90 us | 1.58 us |
 
+// Snaps in reduce
+// | Method     | Mean     | Error    | StdDev   |
+// |----------- |---------:|---------:|---------:|
+// | ComputeFec | 77.96 us | 1.036 us | 0.865 us |
+
+// More Spans
+// | Method     | Mean     | Error    | StdDev   |
+// |----------- |---------:|---------:|---------:|
+// | ComputeFec | 77.45 us | 0.396 us | 0.330 us |
+
 public class Program
 {
     public class FecBench
@@ -27,7 +37,6 @@ public class Program
         public List<byte[]> ComputeFec()
         {
             FecDecodeImpl.fec_decode(
-                _testCase.BlockSize,
                 _testCase.DataBlocks,
                 _testCase.NrDataBlocks,
                 _testCase.FecBlocks,

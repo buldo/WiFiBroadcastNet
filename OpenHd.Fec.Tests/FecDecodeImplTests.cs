@@ -24,7 +24,6 @@ public class FecDecodeImplTests
         foreach (var fecTestCase in _cases)
         {
             FecDecodeImpl.fec_decode(
-                fecTestCase.BlockSize,
                 fecTestCase.DataBlocks,
                 fecTestCase.NrDataBlocks,
                 fecTestCase.FecBlocks,

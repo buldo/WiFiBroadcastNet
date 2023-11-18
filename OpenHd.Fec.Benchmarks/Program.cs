@@ -21,6 +21,11 @@ namespace OpenHd.Fec.Benchmarks;
 // |----------- |---------:|---------:|---------:|
 // | ComputeFec | 77.45 us | 0.396 us | 0.330 us |
 
+// Safe code
+// | Method     | Mean     | Error    | StdDev   |
+// |----------- |---------:|---------:|---------:|
+// | ComputeFec | 77.36 us | 0.308 us | 0.273 us |
+
 public class Program
 {
     public class FecBench

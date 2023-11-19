@@ -5,7 +5,7 @@
       "OpenHd.Fec.Benchmarks\\OpenHd.Fec.Benchmarks.csproj",
       "OpenHd.Fec.Tests\\OpenHd.Fec.Tests.csproj",
       "OpenHd.Fec\\OpenHd.Fec.csproj",
-      "Osd.WinUI\\Osd.WinUI.csproj",
+      "Osd.Wpf\\Osd.Wpf.csproj",
       "OsdDemo\\OsdDemo.csproj",
       "PerformanceTester\\PerformanceTester.csproj",
       "SendSinglePacketDemo\\SendSinglePacketDemo.csproj",

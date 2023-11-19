@@ -87,14 +87,10 @@ public static class Gf256FlatTable
             return;
         }
 
-        var cnt = Vector128<byte>.Count;
-
-        var tt1 = tl[constant];
-        var t1 = new Vector<byte>(tt1);
-        var tt2 = th[constant];
-        var t2 = new Vector<byte>(tt2);
-        var m1 = new Vector<byte>(0x0f);
-        var m2 = new Vector<byte>(0xf0);
+        var t1 = Vector128.Create(tl[constant]);
+        var t2 = Vector128.Create(th[constant]);
+        var m1 = Vector128.Create<byte>(0x0f);
+        var m2 = Vector128.Create<byte>(0xf0);
 
         var iterationsCount = region1.Length / 16;
 
@@ -103,18 +99,16 @@ public static class Gf256FlatTable
             var reg1 = region1.Slice(i * 16, 16);
             var reg2 = region2.Slice(i * 16, 16);
 
-            var in2 = new Vector<byte>(reg2);
-            var l = Vector.BitwiseAnd(in2, m1);
-            var ll = Ssse3.Shuffle(t1.AsVector128(), l.AsVector128());
-            var h = Vector.BitwiseAnd(in2, m2);
-            h = Vector.ShiftRightLogical(h, 4);
-            var hh = Ssse3.Shuffle(t2.AsVector128(), h.AsVector128());
-
-            var outVal = Sse2.Xor(hh, ll);
-
-            var in1 = new Vector<byte>(reg1);
-            outVal = Sse2.Xor(outVal, in1.AsVector128());
-            outVal.CopyTo(reg1);
+            var in2 = Vector128.Create<byte>(reg2);                // in2 = _mm_loadu_si128((const __m128i *) region2);
+            var in1 = Vector128.Create<byte>(reg1);                // in1 = _mm_loadu_si128((const __m128i *) region1);
+            var l = Sse2.And(in2, m1);                             // l = _mm_and_si128(in2, m1);
+            l = Ssse3.Shuffle(t1, l);                              // l = _mm_shuffle_epi8(t1, l);
+            var h = Sse2.And(in2, m2);                             // h = _mm_and_si128(in2, m2);
+            h = Sse2.ShiftRightLogical(h.AsUInt64(), 4).AsByte();  // h = _mm_srli_epi64(h, 4); //TODO: why not _mm_bsrli_si128?
+            h = Ssse3.Shuffle(t2, h);                              // h = _mm_shuffle_epi8(t2, h);
+            var outVar = Sse2.Xor(h, l);                           // out = _mm_xor_si128(h, l);
+            outVar = Sse2.Xor(outVar, in1);                        // out = _mm_xor_si128(out, in1);
+            outVar.CopyTo(reg1);                                   // _mm_storeu_si128((__m128i *) region1, out);
         }
     }
 
@@ -126,9 +120,9 @@ public static class Gf256FlatTable
         {
             var reg1 = region1.Slice(i * 16, 16);
             var reg2 = region2.Slice(i * 16, 16);
-            var in2 = new Vector<byte>(reg2);
-            var in1 = new Vector<byte>(reg1);
-            Vector
+            var in2 = Vector128.Create<byte>(reg2);
+            var in1 = Vector128.Create<byte>(reg1);
+            Sse2
                 .Xor(in1, in2)
                 .CopyTo(reg1);
         }

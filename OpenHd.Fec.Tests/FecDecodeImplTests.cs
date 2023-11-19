@@ -4,42 +4,43 @@ namespace OpenHd.Fec.Tests;
 
 public class FecDecodeImplTests
 {
-    private List<FecTestCase> _cases = new();
+    public static List<FecTestCase> Cases = new();
 
-    [SetUp]
-    public void Setup()
+    static FecDecodeImplTests()
     {
         for (int i = 0; i < 100; i++)
         {
             var name = $"fec_cases/case{i:D4}.bin";
             var data = File.ReadAllBytes(name);
             var testCase = MessagePackSerializer.Deserialize<FecTestCase>(data);
-            _cases.Add(testCase);
+            Cases.Add(testCase);
         }
     }
 
-    [Test]
-    public void Test1()
+    [SetUp]
+    public void Setup()
     {
-        foreach (var fecTestCase in _cases)
+
+    }
+
+    [Test]
+    [TestCaseSource(nameof(Cases))]
+    public void Test1(FecTestCase fecTestCase)
+    {
+        FecDecodeImpl.fec_decode(
+            fecTestCase.DataBlocks,
+            fecTestCase.NrDataBlocks,
+            fecTestCase.FecBlocks,
+            fecTestCase.FecBlockNos,
+            fecTestCase.ErasedBlocks,
+            fecTestCase.NrFecBlocks);
+
+        for (int i = 0; i < fecTestCase.DataBlocks.Count; i++)
         {
-            FecDecodeImpl.fec_decode(
-                fecTestCase.DataBlocks,
-                fecTestCase.NrDataBlocks,
-                fecTestCase.FecBlocks,
-                fecTestCase.FecBlockNos,
-                fecTestCase.ErasedBlocks,
-                fecTestCase.NrFecBlocks);
+            var actual = fecTestCase.DataBlocks[i];
+            var expected = fecTestCase.DataBlocksAfterFec[i];
 
-            for (int i = 0; i < fecTestCase.DataBlocks.Count; i++)
-            {
-                var actual = fecTestCase.DataBlocks[i];
-                var expected = fecTestCase.DataBlocksAfterFec[i];
-
-                CollectionAssert.AreEqual(expected, actual);
-            }
+            CollectionAssert.AreEqual(expected, actual);
         }
-
-        Assert.Pass();
     }
 }

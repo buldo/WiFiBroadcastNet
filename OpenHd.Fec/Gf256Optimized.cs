@@ -11,30 +11,23 @@ public static class Gf256Optimized
 
     public static void gf256_madd_optimized(Span<byte> dst, Span<byte> src, byte c)
     {
-        if (Sse3.IsSupported)
+        if (Ssse3.IsSupported)
         {
             int sizeSlow = dst.Length % 16;
             int sizeFast = dst.Length - sizeSlow;
             if (sizeFast > 0)
             {
-                Gf256FlatTable.maddrc256_shuffle_ssse3(dst, src, c);
+                Gf256FlatTable.maddrc256_shuffle_ssse3(dst.Slice(0, sizeFast), src.Slice(0, sizeFast), c);
             }
             if (sizeSlow > 0)
             {
-                Gf256FlatTable.maddrc256_flat_table(dst.Slice(sizeFast, sizeFast), src.Slice(sizeFast, sizeFast), c);
+                Gf256FlatTable.maddrc256_flat_table(dst.Slice(sizeFast, sizeSlow), src.Slice(sizeFast, sizeSlow), c);
             }
         }
-
-        //#ifdef FEC_GF256_USE_X86_SSSE3
-        //        const int sizeSlow = sz % 16;
-        //        const int sizeFast = sz - sizeSlow;
-        //        if(sizeFast>0){
-        //            maddrc256_shuffle_ssse3(dst, src, c, sizeFast);
-        //        }
-        //        if(sizeSlow>0){
-        //            maddrc256_flat_table(&dst[sizeFast],&src[sizeFast], c, sizeSlow);
-        //        }
-        //        //maddrc256_flat_table(dst,src,c,sz);
+        else
+        {
+            Gf256FlatTable.maddrc256_flat_table(dst, src, c);
+        }
         //#elif defined(FEC_GF256_USE_ARM_NEON)
         //        const int sizeSlow = sz % 8;
         //        const int sizeFast = sz - sizeSlow;
@@ -47,8 +40,6 @@ public static class Gf256Optimized
         //            maddrc256_flat_table(&dst[sizeFast], &src[sizeFast], c, sizeSlow);
         //        }
         //#else
-        Gf256FlatTable.maddrc256_flat_table(dst, src, c);
-        //#endif
     }
 
     public static byte gf256_mul(byte x, byte y)

@@ -25,7 +25,7 @@ public static class Gf256FlatTable
         return mult[constant, region2];
     }
 
-    public static void mulrc256_flat_table(Span<byte> region1, Span<byte> region2, byte constant)
+    public static void mulrc256_flat_table(Span<byte> region1, ReadOnlySpan<byte> region2, byte constant)
     {
         if (constant == 0)
         {
@@ -45,7 +45,7 @@ public static class Gf256FlatTable
         }
     }
 
-    public static void maddrc256_flat_table(Span<byte> region1, Span<byte> region2, byte constant)
+    public static void maddrc256_flat_table(Span<byte> region1, ReadOnlySpan<byte> region2, byte constant)
     {
         if (constant == 0)
             return;
@@ -62,7 +62,7 @@ public static class Gf256FlatTable
         }
     }
 
-    private static void xorr_scalar(Span<byte> region1, Span<byte> region2)
+    private static void xorr_scalar(Span<byte> region1, ReadOnlySpan<byte> region2)
     {
         for (int i = 0; i < region1.Length; i++)
         {
@@ -70,7 +70,7 @@ public static class Gf256FlatTable
         }
     }
 
-    public static void maddrc256_shuffle_ssse3(Span<byte> region1, Span<byte> region2, byte constant)
+    public static void maddrc256_shuffle_ssse3(Span<byte> region1, ReadOnlySpan<byte> region2, byte constant)
     {
         //assert(length % 16 == 0);
         //uint8_t* end;
@@ -112,7 +112,7 @@ public static class Gf256FlatTable
         }
     }
 
-    private static void xorr_sse2(Span<byte> region1, Span<byte> region2)
+    private static void xorr_sse2(Span<byte> region1, ReadOnlySpan<byte> region2)
     {
         var iterationsCount = region1.Length / 16;
 
@@ -126,17 +126,42 @@ public static class Gf256FlatTable
                 .Xor(in1, in2)
                 .CopyTo(reg1);
         }
+    }
 
+    public static void mulrc256_shuffle_ssse3(Span<byte> region1, ReadOnlySpan<byte> region2, byte constant)
+    {
+        if (constant == 0)
+        {
+            region1.Fill(0);
+            return;
+        }
 
-        //assert(length % 16 == 0);
-        //uint8_t* end;
-        //__m128i in, out;
+        if (constant == 1)
+        {
+            region2.CopyTo(region1);
+            return;
+        }
 
-        //for (end = region1 + length; region1<end; region1 += 16, region2 += 16) {
-        //    in = _mm_loadu_si128((const __m128i*) region2);
-        //    out = _mm_loadu_si128((const __m128i*) region1);
-        //    out = _mm_xor_si128(in, out);
-        //    _mm_storeu_si128((__m128i*) region1, out);
-        //}
+        var t1 = Vector128.Create(tl[constant]);                // t1 = _mm_loadu_si128((const __m128i *) tl[constant]);
+        var t2 = Vector128.Create(th[constant]);                // t2 = _mm_loadu_si128((const __m128i *) th[constant]);
+        var m1 = Vector128.Create<byte>(0x0f);                  // m1 = _mm_set1_epi8(0x0f);
+        var m2 = Vector128.Create<byte>(0xf0);                  // m2 = _mm_set1_epi8(0xf0);
+
+        var iterationsCount = region1.Length / 16;
+
+        for (int i = 0; i < iterationsCount; i++)
+        {
+            var reg1 = region1.Slice(i * 16, 16);
+            var reg2 = region2.Slice(i * 16, 16);
+
+            var inVal = Vector128.Create<byte>(reg2);             // _mm_loadu_si128((const __m128i *) region2);
+            var l = Sse2.And(inVal, m1);                          // l = _mm_and_si128(in, m1);
+            l = Ssse3.Shuffle(t1, l);                             // l = _mm_shuffle_epi8(t1, l);
+            var h = Sse2.And(inVal, m2);                          // h = _mm_and_si128(in, m2);
+            h = Sse2.ShiftRightLogical(h.AsUInt64(), 4).AsByte(); // h = _mm_srli_epi64(h, 4);
+            h = Ssse3.Shuffle(t2, h);                             // h = _mm_shuffle_epi8(t2, h);
+            var outVal = Sse2.Xor(h, l);                          // out = _mm_xor_si128(h, l);
+            outVal.CopyTo(reg1);                                  // _mm_storeu_si128((__m128i *) region1, out);
+        }
     }
 }

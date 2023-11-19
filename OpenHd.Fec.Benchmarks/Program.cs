@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
 using MessagePack;
@@ -27,10 +26,15 @@ namespace OpenHd.Fec.Benchmarks;
 // |----------- |---------:|---------:|---------:|
 // | ComputeFec | 77.36 us | 0.308 us | 0.273 us |
 
-// gf256_madd_optimized now has Ssse3 realisation
+// gf256_madd_optimized has Ssse3 version
 // | Method     | Mean     | Error     | StdDev    |
 // |----------- |---------:|----------:|----------:|
 // | ComputeFec | 8.366 us | 0.1345 us | 0.1050 us |
+
+// gf256_mul_optimized has Ssse3 version
+// | Method     | Mean     | Error     | StdDev    |
+// |----------- |---------:|----------:|----------:|
+// | ComputeFec | 5.037 us | 0.0124 us | 0.0104 us |
 
 public class Program
 {

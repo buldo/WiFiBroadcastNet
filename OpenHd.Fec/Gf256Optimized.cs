@@ -1,4 +1,6 @@
-﻿namespace OpenHd.Fec;
+﻿using System.Runtime.Intrinsics.X86;
+
+namespace OpenHd.Fec;
 
 public static class Gf256Optimized
 {
@@ -9,6 +11,20 @@ public static class Gf256Optimized
 
     public static void gf256_madd_optimized(Span<byte> dst, Span<byte> src, byte c)
     {
+        if (Sse3.IsSupported)
+        {
+            int sizeSlow = dst.Length % 16;
+            int sizeFast = dst.Length - sizeSlow;
+            if (sizeFast > 0)
+            {
+                Gf256FlatTable.maddrc256_shuffle_ssse3(dst, src, c);
+            }
+            if (sizeSlow > 0)
+            {
+                Gf256FlatTable.maddrc256_flat_table(dst.Slice(sizeFast, sizeFast), src.Slice(sizeFast, sizeFast), c);
+            }
+        }
+
         //#ifdef FEC_GF256_USE_X86_SSSE3
         //        const int sizeSlow = sz % 16;
         //        const int sizeFast = sz - sizeSlow;

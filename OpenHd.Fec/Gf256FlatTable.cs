@@ -1,8 +1,14 @@
-﻿namespace OpenHd.Fec;
+﻿using System.Numerics;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+
+namespace OpenHd.Fec;
 
 public static class Gf256FlatTable
 {
     static byte[,] mult = Tables.MOEPGF256_MUL_TABLE;
+    static byte[][] tl = Tables.MOEPGF256_SHUFFLE_LOW_TABLE;
+    static byte[][] th = Tables.MOEPGF256_SHUFFLE_HIGH_TABLE;
 
     public static byte mulrc256_flat_table(byte region1, byte region2, byte constant)
     {
@@ -62,5 +68,81 @@ public static class Gf256FlatTable
         {
             region1[i] ^= region2[i];
         }
+    }
+
+    public static void maddrc256_shuffle_ssse3(Span<byte> region1, Span<byte> region2, byte constant)
+    {
+        //assert(length % 16 == 0);
+        //uint8_t* end;
+        //__m128i t1, t2, m1, m2, in1, in2, out, l, h;
+
+        if (constant == 0)
+        {
+            return;
+        }
+
+        if (constant == 1)
+        {
+            xorr_sse2(region1, region2);
+            return;
+        }
+
+        var cnt = Vector128<byte>.Count;
+
+        var tt1 = tl[constant];
+        var t1 = new Vector<byte>(tt1);
+        var tt2 = th[constant];
+        var t2 = new Vector<byte>(tt2);
+        var m1 = new Vector<byte>(0x0f);
+        var m2 = new Vector<byte>(0xf0);
+
+        var iterationsCount = region1.Length / 16;
+
+        for (int i = 0; i < iterationsCount; i++)
+        {
+            var reg1 = region1.Slice(i * 16, 16);
+            var reg2 = region2.Slice(i * 16, 16);
+
+            var in2 = new Vector<byte>(reg2);
+            var l = Vector.BitwiseAnd(in2, m1);
+            var ll = Ssse3.Shuffle(t1.AsVector128(), l.AsVector128());
+            var h = Vector.BitwiseAnd(in2, m2);
+            h = Vector.ShiftRightLogical(h, 4);
+            var hh = Ssse3.Shuffle(t2.AsVector128(), h.AsVector128());
+
+            var outVal = Sse2.Xor(hh, ll);
+
+            var in1 = new Vector<byte>(reg1);
+            outVal = Sse2.Xor(outVal, in1.AsVector128());
+            outVal.CopyTo(reg1);
+        }
+    }
+
+    private static void xorr_sse2(Span<byte> region1, Span<byte> region2)
+    {
+        var iterationsCount = region1.Length / 16;
+
+        for (int i = 0; i < iterationsCount; i++)
+        {
+            var reg1 = region1.Slice(i * 16, 16);
+            var reg2 = region2.Slice(i * 16, 16);
+            var in2 = new Vector<byte>(reg2);
+            var in1 = new Vector<byte>(reg1);
+            Vector
+                .Xor(in1, in2)
+                .CopyTo(reg1);
+        }
+
+
+        //assert(length % 16 == 0);
+        //uint8_t* end;
+        //__m128i in, out;
+
+        //for (end = region1 + length; region1<end; region1 += 16, region2 += 16) {
+        //    in = _mm_loadu_si128((const __m128i*) region2);
+        //    out = _mm_loadu_si128((const __m128i*) region1);
+        //    out = _mm_xor_si128(in, out);
+        //    _mm_storeu_si128((__m128i*) region1, out);
+        //}
     }
 }

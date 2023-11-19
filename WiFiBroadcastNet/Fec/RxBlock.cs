@@ -1,6 +1,5 @@
 ﻿using System.Buffers.Binary;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using OpenHd.Fec;
 using WiFiBroadcastNet.RadioStreams;
 
@@ -20,7 +19,7 @@ class RxBlock
     /// <summary>
     /// for each fragment (via fragment_idx) store if it has been received yet
     /// </summary>
-    private readonly List<bool> _fragmentMap;
+    private readonly bool[] _fragmentMap;
 
     /// <summary>
     /// holds all the data for all received fragments (if fragment_map says UNAVALIABLE at this position, content is undefined)
@@ -49,11 +48,9 @@ class RxBlock
     public RxBlock(int maxNFragmentsPerBlock, ulong blockIdx1)
     {
         _blockIdx = blockIdx1;
-        _fragmentMap = new List<bool>(maxNFragmentsPerBlock); //after creation of the RxBlock every f. is marked as unavailable
-        for (int i = 0; i < maxNFragmentsPerBlock; i++)
-        {
-            _fragmentMap.Add(FecDecodeImpl.FRAGMENT_STATUS_UNAVAILABLE);
-        }
+
+        _fragmentMap = new bool[maxNFragmentsPerBlock]; //after creation of the RxBlock every f. is marked as unavailable
+        _fragmentMap.AsSpan().Fill(FecDecodeImpl.FRAGMENT_STATUS_UNAVAILABLE);
 
         _blockBuffer = new List<byte[]>(maxNFragmentsPerBlock);
         for (int i = 0; i < maxNFragmentsPerBlock; i++)

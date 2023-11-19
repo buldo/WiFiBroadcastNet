@@ -18,7 +18,7 @@ public static class FecDecodeImpl
     public static List<int> fecDecode(
         List<byte[]> blockBuffer,
         int nPrimaryFragments,
-        List<bool> fragmentStatusList)
+        bool[] fragmentStatusList)
     {
         //assert(fragmentSize <= S);
         //assert(fragmentStatusList.size() <= blockBuffer.size());
@@ -38,7 +38,7 @@ public static class FecDecodeImpl
         // find enough secondary fragments
         List<byte[]> secondaryFragmentP = new();
         List<int> secondaryFragmentIndices = new();
-        for (int i = 0; i < fragmentStatusList.Count - nPrimaryFragments; i++)
+        for (int i = 0; i < fragmentStatusList.Length - nPrimaryFragments; i++)
         {
             var idx = nPrimaryFragments + i;
             if (fragmentStatusList[idx] == FRAGMENT_STATUS_AVAILABLE)

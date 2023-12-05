@@ -1,4 +1,5 @@
 using MessagePack;
+using NUnit.Framework.Legacy;
 
 namespace OpenHd.Fec.Tests;
 

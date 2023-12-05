@@ -1,3 +1,5 @@
+using NUnit.Framework.Legacy;
+
 namespace OpenHd.Fec.Tests;
 
 public class MatrixTests

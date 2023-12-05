@@ -9,16 +9,16 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Asv.Mavlink" Version="3.4.2-alpha10" />
-    <PackageReference Include="Avalonia" Version="11.0.5-rc1" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.5-rc1" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.5-rc1" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.5-rc1" />
+    <PackageReference Include="Asv.Mavlink" Version="3.6.0-alpha08" />
+    <PackageReference Include="Avalonia" Version="11.0.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.5" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.5" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.5-rc1" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.5" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="2.40.3" />
-    <PackageReference Include="LibVLCSharp.Avalonia" Version="3.8.0" />
-    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
+    <PackageReference Include="LibVLCSharp.Avalonia" Version="3.8.2" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.20" />
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@ using Android.OS;
 using Android.App;
 using Android.Content.PM;
 using Android.Content;
+using ReceiverApp.Platforms.Android.BackgroundService;
 
 namespace ReceiverApp.Platforms.Android;
 
@@ -26,14 +27,37 @@ public class MainActivity : MauiAppCompatActivity
 
     public void StartService()
     {
-        var serviceIntent = new Intent(this, typeof(WfbBackgroundService));
-        serviceIntent.PutExtra("inputExtra", "Background Service");
-        StartForegroundService(serviceIntent);
+        //var serviceIntent = new Intent(this, typeof(WfbBackgroundService));
+        //serviceIntent.PutExtra("inputExtra", "Background Service");
+        //StartForegroundService(serviceIntent);
+        actionOnService(Actions.START);
     }
 
     public void StopService()
     {
-        var serviceIntent = new Intent(this, typeof(WfbBackgroundService));
-        StopService(serviceIntent);
+        //var serviceIntent = new Intent(this, typeof(WfbBackgroundService));
+        //StopService(serviceIntent);
+        actionOnService(Actions.STOP);
     }
+
+    private void actionOnService(Actions action)
+    {
+        if (this.getServiceState() == ServiceState.STOPPED && action == Actions.STOP)
+        {
+            return;
+        }
+
+        var serviceIntent = new Intent(this, typeof(EndlessService));
+        serviceIntent.SetAction(action.ToString());
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+        {
+            //log("Starting the service in >=26 Mode");
+            StartForegroundService(serviceIntent);
+            return;
+        }
+
+        //log("Starting the service in < 26 Mode");
+        StartService(serviceIntent);
+    }
+
 }

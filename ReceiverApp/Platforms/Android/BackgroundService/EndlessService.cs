@@ -1,14 +1,13 @@
-﻿using System;
-
-using Android.App;
+﻿using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.OS;
 using Android.Widget;
-using Xamarin.KotlinX.Coroutines;
 
 namespace ReceiverApp.Platforms.Android.BackgroundService;
 
-[Service(Enabled = true, Exported = false)]
+[Service(Enabled = true, Exported = false, ForegroundServiceType = ForegroundService.TypeDataSync)]
+
 public class EndlessService : Service
 {
     private PowerManager.WakeLock? wakeLock = null;
@@ -197,6 +196,7 @@ public class EndlessService : Service
             .SetContentIntent(pendingIntent)
             .SetSmallIcon(_Microsoft.Android.Resource.Designer.ResourceConstant.Drawable.ic_clear_black_24)
             .SetTicker("Ticker text")
+            .SetOngoing(true)
             .Build();
         return notification;
     }

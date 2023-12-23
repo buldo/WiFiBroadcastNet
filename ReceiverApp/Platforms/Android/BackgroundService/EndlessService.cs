@@ -47,7 +47,7 @@ public class EndlessService : Service
             //log("with a null intent. It has been probably restarted by the system.");
         }
         // by returning this we make sure the service is restarted if the system kills the service
-        return StartCommandResult.Sticky;
+        return StartCommandResult.RedeliverIntent;
     }
 
     public override void OnCreate()

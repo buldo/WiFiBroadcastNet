@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="Osd.Wpf.Views.ReceiverControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Osd.Wpf.Views"
+             xmlns:viewModels="clr-namespace:Osd.Wpf.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance viewModels:ReceiverControlViewModel}"
+             d:DesignHeight="600" d:DesignWidth="240">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="1">
+            <TextBlock
+                Text="{Binding DevicesCount, StringFormat='Devices count: {0}'}"/>
+            <Button
+                Command="{Binding RefreshDevicesCommand}"
+                >Refresh devices list</Button>
+            <Button
+                Command="{Binding StartCommand}"
+                >Start receiving</Button>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <ComboBox
+                    Grid.Column="0"
+                    IsEnabled="{Binding IsStarted}"/>
+                <Button
+                    Grid.Column="1"
+                    Command="{Binding ChangeChannelCommand}"
+                    >Set channel</Button>
+            </Grid>
+        </StackPanel>
+    </Grid>
+</UserControl>

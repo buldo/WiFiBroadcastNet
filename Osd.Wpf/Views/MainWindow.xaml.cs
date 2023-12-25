@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Osd.Wpf.ViewModels;
 
 namespace Osd.Wpf;
 /// <summary>
@@ -18,13 +19,14 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        MediaPlayer player = new MediaPlayer();
-        player.Open(new Uri(@"C:\testData\media\Eurotrip.mkv", UriKind.Relative));
-        VideoDrawing drawing = new VideoDrawing();
-        drawing.Rect = new Rect(0, 0, 300, 200);
-        drawing.Player = player;
-        player.Play();
-        DrawingBrush brush = new DrawingBrush(drawing);
-        this.Background = brush;
+        DataContext = new MainViewModel();
+        //MediaPlayer player = new MediaPlayer();
+        //player.Open(new Uri(@"C:\testData\media\Eurotrip.mkv", UriKind.Relative));
+        //VideoDrawing drawing = new VideoDrawing();
+        //drawing.Rect = new Rect(0, 0, 300, 200);
+        //drawing.Player = player;
+        //player.Play();
+        //DrawingBrush brush = new DrawingBrush(drawing);
+        //this.Background = brush;
     }
 }

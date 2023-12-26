@@ -29,4 +29,10 @@ public partial class MainWindow : Window
         //DrawingBrush brush = new DrawingBrush(drawing);
         //this.Background = brush;
     }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        App.Current.Shutdown();
+    }
 }

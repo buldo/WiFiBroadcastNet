@@ -6,6 +6,8 @@ namespace Osd.Wpf.ViewModels;
 
 public class OsdVideoViewModel : ObservableObject
 {
+    private bool _isPlaying = false;
+
     private readonly string _sdp = """
                                    sdp://v=0
                                    c=IN IP4 0.0.0.0
@@ -31,6 +33,11 @@ public class OsdVideoViewModel : ObservableObject
 
     public void StartPlay()
     {
+        if (_isPlaying)
+        {
+            MediaPlayer.Stop();
+        }
+        _isPlaying = true;
         MediaPlayer.Play(_media);
     }
 }

@@ -15,6 +15,9 @@ public class WfbLink
     private readonly Dictionary<int, IRadioStream> _radioStreams = new();
     private readonly Decryptor _decryptor;
 
+    private readonly HashSet<(byte, bool)> _knownIndexes = new();
+    private readonly SessionKeysRadioStream _sessionKeyStream;
+
     public WfbLink(
         IDevicesProvider devicesProvider,
         List<UserStream> streamAccessor,
@@ -34,8 +37,8 @@ public class WfbLink
 
         _decryptor = new Decryptor(logger, keypair.get_rx_key(!true));
 
-        var sessionKeyStream = new SessionKeysRadioStream(_decryptor, _logger);
-        _radioStreams.Add(sessionKeyStream.Id, sessionKeyStream);
+        _sessionKeyStream = new SessionKeysRadioStream(_decryptor, _logger);
+        _radioStreams.Add(_sessionKeyStream.Id, _sessionKeyStream);
 
         foreach (var userStream in streamAccessor)
         {
@@ -80,8 +83,6 @@ public class WfbLink
         }
     }
 
-    private readonly HashSet<(byte, bool)> _knownIndexes = new();
-
     private void ProcessRxFrame(RxFrame frame)
     {
         if (!frame.IsValidWfbFrame())
@@ -109,13 +110,12 @@ public class WfbLink
             _knownIndexes.Add((radioPort.MultiplexIndex, radioPort.Encrypted));
         }
 
-        if (_radioStreams.TryGetValue(radioPort.MultiplexIndex, out var stream))
+        if (radioPort.MultiplexIndex == _sessionKeyStream.Id)
         {
-            if (radioPort.MultiplexIndex == 10 && radioPort.Encrypted)
-            {
-
-            }
-
+            _sessionKeyStream.ProcessFrame(frame.Payload.ToArray());
+        }
+        else if (_radioStreams.TryGetValue(radioPort.MultiplexIndex, out var stream))
+        {
             Memory<byte> decryptedPayload;
             if (radioPort.Encrypted)
             {
@@ -123,22 +123,19 @@ public class WfbLink
                 (var success, decryptedPayload) = _decryptor.AuthenticateAndDecrypt(nonce, frame.Payload);
                 if (!success)
                 {
+                    _logger.LogWarning("DECODE ERROR");
                     return;
                 }
-
-                //_logger.LogWarning("DECODE SUCCESS");
             }
             else
             {
-                // TODO: This is not work for key exchange. Need to put exchange to different place
                 var nonce = frame.GetNonce();
                 (var success, decryptedPayload) = _decryptor.Authenticate(nonce, frame.Payload);
                 if (!success)
                 {
+                    _logger.LogWarning("AUTH ERROR");
                     return;
                 }
-
-                //_logger.LogWarning("Auth SUCCESS");
             }
 
             stream.ProcessFrame(decryptedPayload);

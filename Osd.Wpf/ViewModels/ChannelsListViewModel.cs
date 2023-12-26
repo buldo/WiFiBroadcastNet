@@ -5,7 +5,7 @@ namespace Osd.Wpf.ViewModels;
 
 public class ChannelsListViewModel : ObservableObject
 {
-    private WlanChannel _selectedChannel = Channels.Ch048;
+    private WlanChannel _selectedChannel = Channels.Ch149;
 
     public List<WlanChannel> ChannelsList { get; } =
     [

@@ -13,6 +13,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="1">
@@ -53,5 +54,11 @@
                     >Set channel</Button>
             </Grid>
         </StackPanel>
+        <TextBlock Grid.Row="2" IsHyphenationEnabled="True" TextWrapping="Wrap">
+            <Hyperlink
+                NavigateUri="https://zadig.akeo.ie"
+                RequestNavigate="HyperlinkOnRequestNavigate"
+                >Use Zadig to change RTL8812AU driver to WinUSB</Hyperlink>
+        </TextBlock>
     </Grid>
 </UserControl>

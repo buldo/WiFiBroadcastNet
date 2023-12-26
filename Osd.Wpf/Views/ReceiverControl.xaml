@@ -24,7 +24,7 @@
                 >Refresh devices list</Button>
             <Button
                 Command="{Binding StartCommand}"
-                >Start receiving</Button>
+                >Start receiving( takes looong time)</Button>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>

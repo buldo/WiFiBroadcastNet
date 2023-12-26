@@ -20,4 +20,9 @@ public class MainViewModel : ObservableObject
     {
         Osd.StartPlay();
     }
+
+    public void Stop()
+    {
+        ReceiverControl.Stop();
+    }
 }

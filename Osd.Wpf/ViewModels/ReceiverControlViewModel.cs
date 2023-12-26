@@ -12,15 +12,15 @@ namespace Osd.Wpf.ViewModels;
 public class ReceiverControlViewModel : ObservableObject
 {
     private readonly WiFiDriver _wifiDriver;
-    private readonly WfbHost _wfbHost;
+    private WfbHost _wfbHost;
     private int _devicesCount;
     private bool _isStarted;
+    private readonly ILoggerFactory _loggerFactory;
 
     public ReceiverControlViewModel()
     {
-        var loggerFactory = App.Current.Services.GetRequiredService<ILoggerFactory>();
-        _wifiDriver = new WiFiDriver(loggerFactory, true);
-        _wfbHost = new WfbHost(_wifiDriver, loggerFactory);
+        _loggerFactory = App.Current.Services.GetRequiredService<ILoggerFactory>();
+        _wifiDriver = new WiFiDriver(_loggerFactory, true);
         RefreshDevicesCommand = new RelayCommand(ExecuteRefreshDevices, CanExecuteRefreshDevices);
         ChangeChannelCommand = new RelayCommand(ExecuteChangeChannel, CanExecuteChangeChannel);
         StartCommand = new RelayCommand(ExecuteStart, CanExecuteStart);
@@ -104,6 +104,13 @@ public class ReceiverControlViewModel : ObservableObject
     private void ExecuteStart()
     {
         IsStarted = true;
+        _wfbHost = new WfbHost(_wifiDriver, _loggerFactory);
         _wfbHost.Start(ChannelsSelector.SelectedChannel);
+        OnStarted();
+    }
+
+    public void Stop()
+    {
+        _wifiDriver.Dispose();
     }
 }

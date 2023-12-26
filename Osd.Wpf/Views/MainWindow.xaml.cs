@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.ComponentModel;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -30,9 +31,10 @@ public partial class MainWindow : Window
         //this.Background = brush;
     }
 
-    protected override void OnClosed(EventArgs e)
+    protected override void OnClosing(CancelEventArgs e)
     {
-        base.OnClosed(e);
-        App.Current.Shutdown();
+        ((MainViewModel)DataContext).Stop();
+        Environment.Exit(0);
+        base.OnClosing(e);
     }
 }

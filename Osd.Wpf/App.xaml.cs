@@ -32,7 +32,8 @@ public partial class App : Application
             builder
                 .SetMinimumLevel(LogLevel.Trace)
                 .AddFilter("Rtl8812auNet.*", LogLevel.Warning)
-                .AddDebug());
+                .AddDebug()
+            );
 
         return serviceCollection.BuildServiceProvider();
     }

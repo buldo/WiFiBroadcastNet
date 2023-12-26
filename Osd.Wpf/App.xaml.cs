@@ -33,7 +33,6 @@ public partial class App : Application
                 .SetMinimumLevel(LogLevel.Trace)
                 .AddFilter("Rtl8812auNet.*", LogLevel.Warning)
                 .AddDebug());
-        serviceCollection.AddSingleton<GroundHostService>();
 
         return serviceCollection.BuildServiceProvider();
     }

@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Osd.Wpf.Views"
              xmlns:viewModels="clr-namespace:Osd.Wpf.ViewModels"
+             xmlns:wlanUtils="clr-namespace:Bld.WlanUtils;assembly=Bld.WlanUtils"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance viewModels:ReceiverControlViewModel}"
              d:DesignHeight="600" d:DesignWidth="240">
@@ -30,7 +31,22 @@
                 </Grid.ColumnDefinitions>
                 <ComboBox
                     Grid.Column="0"
-                    IsEnabled="{Binding IsStarted}"/>
+                    IsEnabled="{Binding IsStarted}"
+                    ItemsSource="{Binding ChannelsSelector.ChannelsList}"
+                    SelectedValue="{Binding ChannelsSelector.SelectedChannel, NotifyOnTargetUpdated=True}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type wlanUtils:WlanChannel}">
+                            <TextBlock>
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0}/{1}MHz">
+                                        <Binding Path="ChannelNumber"/>
+                                        <Binding Path="ChannelFrequencyMHz"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <Button
                     Grid.Column="1"
                     Command="{Binding ChangeChannelCommand}"

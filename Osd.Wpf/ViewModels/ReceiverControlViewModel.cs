@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Osd.Wpf.Services;
 using Rtl8812auNet;
 
 namespace Osd.Wpf.ViewModels;
@@ -11,6 +12,7 @@ namespace Osd.Wpf.ViewModels;
 public class ReceiverControlViewModel : ObservableObject
 {
     private readonly WiFiDriver _wifiDriver;
+    private readonly WfbHost _wfbHost;
     private int _devicesCount;
     private bool _isStarted;
 
@@ -18,6 +20,7 @@ public class ReceiverControlViewModel : ObservableObject
     {
         var loggerFactory = App.Current.Services.GetRequiredService<ILoggerFactory>();
         _wifiDriver = new WiFiDriver(loggerFactory, true);
+        _wfbHost = new WfbHost(_wifiDriver, loggerFactory);
         RefreshDevicesCommand = new RelayCommand(ExecuteRefreshDevices, CanExecuteRefreshDevices);
         ChangeChannelCommand = new RelayCommand(ExecuteChangeChannel, CanExecuteChangeChannel);
         StartCommand = new RelayCommand(ExecuteStart, CanExecuteStart);
@@ -31,6 +34,8 @@ public class ReceiverControlViewModel : ObservableObject
     public RelayCommand ChangeChannelCommand { get; }
 
     public RelayCommand StartCommand { get; }
+
+    public ChannelsListViewModel ChannelsSelector { get; } = new();
 
     public bool IsStarted
     {
@@ -83,7 +88,7 @@ public class ReceiverControlViewModel : ObservableObject
 
     private void ExecuteChangeChannel()
     {
-
+        _wfbHost.SetChannel(ChannelsSelector.SelectedChannel);
     }
 
     protected virtual void OnStarted()
@@ -99,5 +104,6 @@ public class ReceiverControlViewModel : ObservableObject
     private void ExecuteStart()
     {
         IsStarted = true;
+        _wfbHost.Start(ChannelsSelector.SelectedChannel);
     }
 }

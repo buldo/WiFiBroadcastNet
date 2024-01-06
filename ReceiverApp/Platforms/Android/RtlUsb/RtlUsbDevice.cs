@@ -11,6 +11,7 @@ namespace ReceiverApp
         private readonly UsbDevice _usbDevice;
         private readonly UsbDeviceConnection _usbDeviceConnection;
         private readonly ILogger<RtlUsbDevice> _logger;
+        private readonly object _usbConnectionLock = new();
 
         public RtlUsbDevice(
             UsbDevice usbDevice,
@@ -35,7 +36,12 @@ namespace ReceiverApp
             {
                 try
                 {
-                    var length = _usbDeviceConnection.BulkTransfer(ep, readBuffer, readBuffer.Length, 0);
+                    int length;
+                    lock (_usbConnectionLock)
+                    {
+                        length = _usbDeviceConnection.BulkTransfer(ep, readBuffer, readBuffer.Length, 500);
+                    }
+
                     if (length <0)
                     {
                         _logger.LogError("BULK read ERR {result}", length);
@@ -74,29 +80,35 @@ namespace ReceiverApp
 
         public void WriteBytes(ushort register, Span<byte> data)
         {
-            _usbDeviceConnection.ControlTransfer(
-                (UsbAddressing)0x40,
-                5,
-                register,
-                0,
-                data.ToArray(),
-                data.Length,
-                500);
+            lock (_usbConnectionLock)
+            {
+                _usbDeviceConnection.ControlTransfer(
+                    (UsbAddressing)0x40,
+                    5,
+                    register,
+                    0,
+                    data.ToArray(),
+                    data.Length,
+                    50);
+            }
         }
 
         public ReadOnlySpan<byte> ReadBytes(ushort register, ushort bytesCount)
         {
-            var buffer = new byte[bytesCount];
-            _usbDeviceConnection.ControlTransfer(
-                (UsbAddressing)0xC0,
-                5,
-                register,
-                0,
-                buffer,
-                buffer.Length,
-                500);
+            lock (_usbConnectionLock)
+            {
+                var buffer = new byte[bytesCount];
+                _usbDeviceConnection.ControlTransfer(
+                    (UsbAddressing)0xC0,
+                    5,
+                    register,
+                    0,
+                    buffer,
+                    buffer.Length,
+                    50);
 
-            return buffer;
+                return buffer;
+            }
         }
 
         public List<IRtlEndpoint> GetEndpoints()

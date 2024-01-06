@@ -1,5 +1,5 @@
 ﻿using System.Net;
-
+using System.Text.Json;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -19,19 +19,22 @@ namespace ReceiverApp.Platforms.Android.BackgroundService;
 public class EndlessService : Service
 {
     private readonly ILoggerFactory _loggerFactory;
-    private readonly ILogger<WfbBackgroundService> _logger;
+    private readonly ILogger<EndlessService> _logger;
 
-    private PowerManager.WakeLock? wakeLock = null;
-    private bool isServiceStarted = false;
+    private PowerManager.WakeLock? _wakeLock = null;
+    private bool _isServiceStarted = false;
 
     private WiFiDriver? _driver;
     private WfbLink? _iface;
+    private Task _startTask;
 
     public EndlessService()
     {
         _loggerFactory = IPlatformApplication.Current.Services.GetRequiredService<ILoggerFactory>();
-        _logger = _loggerFactory.CreateLogger<WfbBackgroundService>();
+        _logger = _loggerFactory.CreateLogger<EndlessService>();
     }
+
+    public WlanChannel SelectedChannel { get; private set; } = Channels.Ch149;
 
     public override IBinder? OnBind(Intent? intent)
     {
@@ -51,11 +54,11 @@ public class EndlessService : Service
 
             if (action == Actions.START.ToString())
             {
-                startService();
+                StartService();
             }
             else if(action == Actions.STOP.ToString())
             {
-                stopService();
+                StopService();
             }
             else
             {
@@ -74,7 +77,7 @@ public class EndlessService : Service
     {
         base.OnCreate();
         //log("The service has been created".toUpperCase());
-        var notification = createNotification();
+        var notification = CreateNotification();
         StartForeground(1, notification);
     }
 
@@ -96,30 +99,30 @@ public class EndlessService : Service
         alarmService.Set(AlarmType.ElapsedRealtime, SystemClock.ElapsedRealtime() + 1000, restartServicePendingIntent);
     }
 
-    private void startService()
+    private void StartService()
     {
-        if (isServiceStarted)
+        if (_isServiceStarted)
         {
             return;
         }
 
         //log("Starting the foreground service task")
         Toast.MakeText(this, "Service starting its task", ToastLength.Short).Show();
-        isServiceStarted = true;
+        _isServiceStarted = true;
         this.setServiceState(ServiceState.STARTED);
 
         // we need this lock so our service gets not affected by Doze Mode
         var pm = GetSystemService(Context.PowerService) as PowerManager;
-        wakeLock = pm.NewWakeLock(WakeLockFlags.Partial, "EndlessService::lock");
-        wakeLock.Acquire();
+        _wakeLock = pm.NewWakeLock(WakeLockFlags.Partial, "EndlessService::lock");
+        _wakeLock.Acquire();
 
         // TODO: START HERE
         // we're starting a loop in a coroutine
         //GlobalScope.launch(Dispatchers.IO) {
-        //    while (isServiceStarted)
+        //    while (_isServiceStarted)
         //    {
         //        launch(Dispatchers.IO) {
-        //            pingFakeServer();
+        //            PingFakeServer();
         //        }
         //        delay(1 * 60 * 1000);
         //    }
@@ -127,15 +130,15 @@ public class EndlessService : Service
         //}
     }
 
-    private void stopService()
+    private void StopService()
     {
         //log("Stopping the foreground service")
         Toast.MakeText(this, "Service stopping", ToastLength.Short)?.Show();
         try
         {
-            if (wakeLock is { IsHeld: true })
+            if (_wakeLock is { IsHeld: true })
             {
-                wakeLock.Release();
+                _wakeLock.Release();
             }
 
             StopForeground(true);
@@ -144,11 +147,11 @@ public class EndlessService : Service
         catch (Exception e) {
             //log("Service stopped without being started: ${e.message}")
         }
-        isServiceStarted = false;
+        _isServiceStarted = false;
         this.setServiceState(ServiceState.STOPPED);
     }
 
-    private void pingFakeServer()
+    private void PingFakeServer()
     {
         //var df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.mmmZ");
         //var gmtTime = df.format(Date());
@@ -181,7 +184,7 @@ public class EndlessService : Service
         }
     }
 
-    private Notification createNotification()
+    private Notification CreateNotification()
     {
         var notificationChannelId = "ENDLESS SERVICE CHANNEL";
 
@@ -223,24 +226,40 @@ public class EndlessService : Service
 
     public void StartRx(UsbDevice device, UsbDeviceConnection connection)
     {
-        _driver = new WiFiDriver(_loggerFactory, false);
-        var devicesProvider = new AndroidDevicesProvider(
-            _driver,
-            device,
-            connection,
-            _loggerFactory);
-        _iface = new WfbLink(
-            devicesProvider,
-            CreateAccessors(_loggerFactory),
-            _loggerFactory.CreateLogger<WfbLink>());
-        _iface.Start();
-        _iface.SetChannel(Channels.Ch149);
+        _startTask = Task.Run(() => StartRxInternal(device, connection));
+    }
+
+    private void StartRxInternal(UsbDevice device, UsbDeviceConnection connection)
+    {
+        try
+        {
+            _driver = new WiFiDriver(_loggerFactory, false);
+            var devicesProvider = new AndroidDevicesProvider(
+                _driver,
+                device,
+                connection,
+                _loggerFactory);
+            _iface = new WfbLink(
+                devicesProvider,
+                CreateAccessors(_loggerFactory),
+                _loggerFactory.CreateLogger<WfbLink>());
+            _iface.Start();
+            _iface.SetChannel(SelectedChannel);
+
+
+
+            NotifyStartResult(true, null);
+        }
+        catch (Exception e)
+        {
+            NotifyStartResult(false, e.Message);
+        }
     }
 
     private static List<UserStream> CreateAccessors(ILoggerFactory factory)
     {
-        return new List<UserStream>
-        {
+        return
+        [
             new()
             {
                 StreamId = RadioPorts.VIDEO_PRIMARY_RADIO_PORT,
@@ -267,7 +286,18 @@ public class EndlessService : Service
                 IsFecEnabled = false,
                 StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
             },
-        };
+        ];
     }
 
+
+    private void NotifyStartResult(
+        bool isSuccess,
+        string? errorText)
+    {
+        var intent = new Intent(IntentActions.ServiceRxStarted);
+        var result = new RxStartResult(isSuccess, errorText);
+        var data = JsonSerializer.Serialize(result);
+        intent.PutExtra(nameof(RxStartResult), data);
+        SendBroadcast(intent);
+    }
 }

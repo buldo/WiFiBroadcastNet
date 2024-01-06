@@ -1,4 +1,5 @@
-﻿using Android.Content;
+﻿using System.Text.Json;
+using Android.Content;
 using Android.Hardware.Usb;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,8 +13,9 @@ using Android.Views;
 using LibUsbDotNet;
 
 using ReceiverApp.Platforms.Android;
-
+using ReceiverApp.Platforms.Android.BackgroundService;
 using Context = Android.Content.Context;
+using Environment = System.Environment;
 
 namespace ReceiverApp.Platforms.Android.ViewModels;
 
@@ -34,7 +36,9 @@ public class MainViewModel : ObservableObject
         _statusText = "Init";
 
         _broadcastReceiver = new MyBroadcastReceiver(this);
-        var filter = new IntentFilter(IntentActions.UsbPermission);
+        var filter = new IntentFilter();
+        filter.AddAction(IntentActions.UsbPermission);
+        filter.AddAction(IntentActions.ServiceRxStarted);
         context.RegisterReceiver(_broadcastReceiver, filter);
 
         StartCommand = new RelayCommand(ExecuteStart, CanExecuteStart);
@@ -140,6 +144,22 @@ public class MainViewModel : ObservableObject
         AndroidServiceManager.Service.StartRx(_selectedDevice, connection);
     }
 
+    private void HandleServiceStarted(RxStartResult result)
+    {
+        if (result.IsSuccess)
+        {
+            var channel = AndroidServiceManager.Service.SelectedChannel;
+            StatusText =
+                "Rx started" +
+                Environment.NewLine +
+                $"Channel: {channel.ChannelNumber}/{channel.ChannelFrequencyMHz}";
+        }
+        else
+        {
+            StatusText = result.ErrorMessage;
+        }
+    }
+
     private sealed class MyBroadcastReceiver : BroadcastReceiver
     {
         private readonly MainViewModel _parent;
@@ -154,6 +174,20 @@ public class MainViewModel : ObservableObject
             if (intent.Action == IntentActions.UsbPermission)
             {
                 _parent.StartReceiving();
+            }
+            else if (intent.Action == IntentActions.ServiceRxStarted)
+            {
+                var data = intent.GetStringExtra(nameof(RxStartResult));
+                if (data == null)
+                {
+                    _parent.StatusText = "WTF from started intent";
+                    return;
+                }
+                var result = JsonSerializer.Deserialize<RxStartResult>(data);
+                if (result!.IsSuccess)
+                {
+                    _parent.HandleServiceStarted(result);
+                }
             }
         }
     }

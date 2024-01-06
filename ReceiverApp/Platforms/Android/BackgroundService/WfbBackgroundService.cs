@@ -30,8 +30,7 @@ public class WfbBackgroundService
     private bool isServiceStarted = false;
 
 
-    private WiFiDriver? _driver;
-    private WfbLink? _iface;
+
 
     private Task _task;
 
@@ -51,48 +50,9 @@ public class WfbBackgroundService
     private void Start()
     {
 
-        _driver = new WiFiDriver(_loggerFactory, false);
-        var devicesProvider = new AndroidDevicesProvider(_driver, _loggerFactory);
-        _iface = new WfbLink(
-            devicesProvider,
-            CreateAccessors(_loggerFactory),
-            _loggerFactory.CreateLogger<WfbLink>());
-        _iface.Start();
-        _iface.SetChannel(Channels.Ch149);
+
     }
 
-    private List<UserStream> CreateAccessors(ILoggerFactory factory)
-    {
-        return new List<UserStream>
-        {
-            new()
-            {
-                StreamId = RadioPorts.VIDEO_PRIMARY_RADIO_PORT,
-                IsFecEnabled = true,
-                StreamAccessor = new UdpTransferAccessor(
-                    factory.CreateLogger<UdpTransferAccessor>(),
-                    new IPEndPoint(IPAddress.Loopback, 5600)),
-            },
-            new()
-            {
-                StreamId = RadioPorts.VIDEO_SECONDARY_RADIO_PORT,
-                IsFecEnabled = true,
-                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
-            },
-            new()
-            {
-                StreamId = RadioPorts.TELEMETRY_WIFIBROADCAST_TX_RADIO_PORT,
-                IsFecEnabled = false,
-                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
-            },
-            new()
-            {
-                StreamId = RadioPorts.MANAGEMENT_RADIO_PORT_AIR_TX,
-                IsFecEnabled = false,
-                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
-            },
-        };
-    }
 
     private void StartService()
     {

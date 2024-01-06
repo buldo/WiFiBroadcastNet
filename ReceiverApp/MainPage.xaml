@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="ReceiverApp.MainPage">
+             xmlns:viewModels="clr-namespace:ReceiverApp.Platforms.Android.ViewModels"
+             x:Class="ReceiverApp.MainPage"
+             x:DataType="viewModels:MainViewModel"
+             >
 
     <ScrollView>
         <VerticalStackLayout
@@ -22,15 +25,13 @@
                 HorizontalOptions="Center" />
 
             <Label
-                x:Name="StatusLabel"
-                Text="Push the button!"
+                Text="{Binding StatusText}"
                 FontSize="18"
                 HorizontalOptions="Center" />
 
             <Button
-                x:Name="CounterBtn"
                 Text="Start"
-                Clicked="OnCounterClicked"
+                Command="{Binding StartCommand}"
                 HorizontalOptions="Center" />
 
         </VerticalStackLayout>

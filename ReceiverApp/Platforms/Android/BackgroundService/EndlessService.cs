@@ -1,8 +1,16 @@
-﻿using Android.App;
+﻿using System.Net;
+
+using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using Android.Hardware.Usb;
 using Android.OS;
 using Android.Widget;
+using Bld.WlanUtils;
+using Microsoft.Extensions.Logging;
+
+using Rtl8812auNet;
+using WiFiBroadcastNet;
 
 namespace ReceiverApp.Platforms.Android.BackgroundService;
 
@@ -10,9 +18,20 @@ namespace ReceiverApp.Platforms.Android.BackgroundService;
 
 public class EndlessService : Service
 {
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger<WfbBackgroundService> _logger;
+
     private PowerManager.WakeLock? wakeLock = null;
     private bool isServiceStarted = false;
 
+    private WiFiDriver? _driver;
+    private WfbLink? _iface;
+
+    public EndlessService()
+    {
+        _loggerFactory = IPlatformApplication.Current.Services.GetRequiredService<ILoggerFactory>();
+        _logger = _loggerFactory.CreateLogger<WfbBackgroundService>();
+    }
 
     public override IBinder? OnBind(Intent? intent)
     {
@@ -23,6 +42,7 @@ public class EndlessService : Service
 
     public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
     {
+        AndroidServiceManager.RegisterServiceInstance(this);
         //log("onStartCommand executed with startId: $startId")
         if (intent != null)
         {
@@ -200,4 +220,54 @@ public class EndlessService : Service
             .Build();
         return notification;
     }
+
+    public void StartRx(UsbDevice device, UsbDeviceConnection connection)
+    {
+        _driver = new WiFiDriver(_loggerFactory, false);
+        var devicesProvider = new AndroidDevicesProvider(
+            _driver,
+            device,
+            connection,
+            _loggerFactory);
+        _iface = new WfbLink(
+            devicesProvider,
+            CreateAccessors(_loggerFactory),
+            _loggerFactory.CreateLogger<WfbLink>());
+        _iface.Start();
+        _iface.SetChannel(Channels.Ch149);
+    }
+
+    private static List<UserStream> CreateAccessors(ILoggerFactory factory)
+    {
+        return new List<UserStream>
+        {
+            new()
+            {
+                StreamId = RadioPorts.VIDEO_PRIMARY_RADIO_PORT,
+                IsFecEnabled = true,
+                StreamAccessor = new UdpTransferAccessor(
+                    factory.CreateLogger<UdpTransferAccessor>(),
+                    new IPEndPoint(IPAddress.Loopback, 5600)),
+            },
+            new()
+            {
+                StreamId = RadioPorts.VIDEO_SECONDARY_RADIO_PORT,
+                IsFecEnabled = true,
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
+            },
+            new()
+            {
+                StreamId = RadioPorts.TELEMETRY_WIFIBROADCAST_TX_RADIO_PORT,
+                IsFecEnabled = false,
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
+            },
+            new()
+            {
+                StreamId = RadioPorts.MANAGEMENT_RADIO_PORT_AIR_TX,
+                IsFecEnabled = false,
+                StreamAccessor = new UdpTransferAccessor(factory.CreateLogger<UdpTransferAccessor>(), null),
+            },
+        };
+    }
+
 }

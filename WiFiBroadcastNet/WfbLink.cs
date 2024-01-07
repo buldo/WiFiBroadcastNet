@@ -112,15 +112,15 @@ public class WfbLink
 
         if (radioPort.MultiplexIndex == _sessionKeyStream.Id)
         {
-            _sessionKeyStream.ProcessFrame(frame.Payload.ToArray());
+            _sessionKeyStream.ProcessFrame(frame.PayloadSpan.ToArray());
         }
         else if (_radioStreams.TryGetValue(radioPort.MultiplexIndex, out var stream))
         {
-            Memory<byte> decryptedPayload;
+            ReadOnlyMemory<byte> decryptedPayload;
             if (radioPort.Encrypted)
             {
                 var nonce = frame.GetNonce();
-                (var success, decryptedPayload) = _decryptor.AuthenticateAndDecrypt(nonce, frame.Payload);
+                (var success, decryptedPayload) = _decryptor.AuthenticateAndDecrypt(nonce, frame.PayloadSpan);
                 if (!success)
                 {
                     _logger.LogWarning("DECODE ERROR");
@@ -130,12 +130,14 @@ public class WfbLink
             else
             {
                 var nonce = frame.GetNonce();
-                (var success, decryptedPayload) = _decryptor.Authenticate(nonce, frame.Payload);
+                (var success, var nullableDecryptedPayload) = _decryptor.Authenticate(nonce, frame.PayloadMemory);
                 if (!success)
                 {
                     _logger.LogWarning("AUTH ERROR");
                     return;
                 }
+
+                decryptedPayload = nullableDecryptedPayload.Value;
             }
 
             stream.ProcessFrame(decryptedPayload);

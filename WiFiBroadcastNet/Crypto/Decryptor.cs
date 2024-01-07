@@ -21,7 +21,7 @@ internal class Decryptor
         _logger = logger;
     }
 
-    public DecryptorResult onNewPacketSessionKeyData(Span<byte> sessionKeyNonce, Span<byte> sessionKeyData)
+    public DecryptorResult onNewPacketSessionKeyData(ReadOnlySpan<byte> sessionKeyNonce, ReadOnlySpan<byte> sessionKeyData)
     {
         var new_session_key = new byte[session_key.Length];
         unsafe
@@ -82,10 +82,10 @@ internal class Decryptor
         }
     }
 
-    public (bool IsSuccess, byte[]? Data) Authenticate(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> encryptedData)
+    public (bool IsSuccess, ReadOnlyMemory<byte>? Data) Authenticate(ReadOnlySpan<byte> nonce, ReadOnlyMemory<byte> encryptedData)
     {
         // TODO: Now just trust everyone
-        return (true, encryptedData.Slice(0, encryptedData.Length - Libsodium.crypto_onetimeauth_BYTES()).ToArray());
+        return (true, encryptedData.Slice(0, encryptedData.Length - Libsodium.crypto_onetimeauth_BYTES()));
     }
 
 }

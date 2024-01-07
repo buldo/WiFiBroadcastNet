@@ -28,7 +28,7 @@ public static class MauiProgram
             });
 
 #if DEBUG
-        builder.Logging.AddDebug();//.SetMinimumLevel(LogLevel.Information);
+        builder.Logging.AddDebug().SetMinimumLevel(LogLevel.Information);
 #endif
 
         return builder.Build();

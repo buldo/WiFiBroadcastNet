@@ -20,7 +20,7 @@ internal class SessionKeysRadioStream : IRadioStream
 
     public int Id => STREAM_INDEX_SESSION_KEY_PACKETS;
 
-    public void ProcessFrame(Memory<byte> decryptedPayload)
+    public void ProcessFrame(ReadOnlyMemory<byte> decryptedPayload)
     {
         // _logger.LogDebug("Processing session key frame");
 

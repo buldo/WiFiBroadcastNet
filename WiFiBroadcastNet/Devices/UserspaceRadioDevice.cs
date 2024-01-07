@@ -11,7 +11,7 @@ public class UserspaceRadioDevice : IRadioDevice
 {
     private readonly Rtl8812aDevice _rtlDevice;
 
-    private ChannelWriter<RxFrame> _receivedFramesChannelWriter;
+    private Action<RxFrame> _receivedFramesChannelWriter;
     private WlanChannel _channel = Channels.Ch036;
     private bool _isStarted = false;
 
@@ -20,7 +20,7 @@ public class UserspaceRadioDevice : IRadioDevice
         _rtlDevice = rtlDevice;
     }
 
-    public void AttachDataConsumer(ChannelWriter<RxFrame> receivedFramesChannel)
+    public void AttachDataConsumer(Action<RxFrame> receivedFramesChannel)
     {
         _receivedFramesChannelWriter = receivedFramesChannel;
     }
@@ -52,9 +52,9 @@ public class UserspaceRadioDevice : IRadioDevice
         ApplyChannel();
     }
 
-    private async Task PacketProcessor(ParsedRadioPacket arg)
+    private void PacketProcessor(ParsedRadioPacket arg)
     {
-        await _receivedFramesChannelWriter.WriteAsync(new RxFrame
+        _receivedFramesChannelWriter(new RxFrame
         {
             Data = arg.Data,
         });

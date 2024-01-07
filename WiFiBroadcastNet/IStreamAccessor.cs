@@ -2,5 +2,5 @@
 
 public interface IStreamAccessor
 {
-    void ProcessIncomingFrame(Memory<byte> payload);
+    void ProcessIncomingFrame(ReadOnlyMemory<byte> payload);
 }

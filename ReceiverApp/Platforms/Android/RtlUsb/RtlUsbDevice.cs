@@ -12,6 +12,7 @@ namespace ReceiverApp
         private readonly UsbDeviceConnection _usbDeviceConnection;
         private readonly ILogger<RtlUsbDevice> _logger;
         private readonly object _usbConnectionLock = new();
+        private BulkDataHandler? _bulkDataHandler;
 
         public RtlUsbDevice(
             UsbDevice usbDevice,
@@ -28,6 +29,12 @@ namespace ReceiverApp
 
             //_reader = _usbDevice.OpenEndpointReader(GetInEp());
         }
+
+        public void SetBulkDataHandler(BulkDataHandler handler)
+        {
+            _bulkDataHandler = handler;
+        }
+
         public void InfinityRead()
         {
             var ep = GetInEp();
@@ -39,7 +46,7 @@ namespace ReceiverApp
                     int length;
                     lock (_usbConnectionLock)
                     {
-                        length = _usbDeviceConnection.BulkTransfer(ep, readBuffer, readBuffer.Length, 50);
+                        length = _usbDeviceConnection.BulkTransfer(ep, readBuffer, readBuffer.Length, 100);
                     }
 
                     if (length <0)
@@ -48,7 +55,7 @@ namespace ReceiverApp
                     }
                     else
                     {
-                        _bulkTransfersChannel.Writer.TryWrite(readBuffer.AsSpan(0, length).ToArray());
+                        _bulkDataHandler?.Invoke(readBuffer.AsSpan(0, length));
                     }
                 }
                 catch (Exception e)
@@ -76,7 +83,6 @@ namespace ReceiverApp
 
         public int Speed { get; } = 3;
 
-        public ChannelReader<byte[]> BulkTransfersReader => _bulkTransfersChannel.Reader;
 
         public void WriteBytes(ushort register, Span<byte> data)
         {

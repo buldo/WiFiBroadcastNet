@@ -17,7 +17,7 @@ public class NoFecStream : IRadioStream
 
     public int Id { get; }
 
-    public void ProcessFrame(Memory<byte> decryptedPayload)
+    public void ProcessFrame(ReadOnlyMemory<byte> decryptedPayload)
     {
         if (decryptedPayload.Length < 8 + 1)
         {
@@ -32,7 +32,7 @@ public class NoFecStream : IRadioStream
     //No duplicates, but packets out of order are possible
     //counting lost packets doesn't work in this mode. It should be done by the upper level
     //saves the last FEC_DISABLED_MAX_SIZE_OF_MAP sequence numbers. If the sequence number of a new packet is already inside the map, it is discarded (duplicate)
-    private void process_packet_seq_nr_and_payload(UInt64 packetSeq, Memory<byte> payload)
+    private void process_packet_seq_nr_and_payload(UInt64 packetSeq, ReadOnlyMemory<byte> payload)
     {
         if (first_ever_packet)
         {

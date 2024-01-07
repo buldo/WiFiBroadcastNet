@@ -27,7 +27,7 @@ public class FecStream : IRadioStream
 
     public int Id { get; }
 
-    public void ProcessFrame(Memory<byte> decryptedPayload)
+    public void ProcessFrame(ReadOnlyMemory<byte> decryptedPayload)
     {
         if (!FecDecoder.validate_packet_size(decryptedPayload.Length))
         {

@@ -42,7 +42,9 @@ public class RxFrame
 
     public Span<byte> SequenceControl => _data.AsSpan(22, 2);
 
-    public Span<byte> Payload => _data.AsSpan(24..^4);
+    public Span<byte> PayloadSpan => _data.AsSpan(24..^4);
+
+    public Memory<byte> PayloadMemory => _data.AsMemory(24..^4);
 
     public ReadOnlySpan<byte> GetNonce()
     {
@@ -71,7 +73,7 @@ public class RxFrame
             return false;
         }
 
-        if (Payload.Length == 0)
+        if (PayloadSpan.Length == 0)
         {
             return false;
         }
@@ -86,7 +88,7 @@ public class RxFrame
             return false;
         }
 
-        // TODO: add `frame.Payload.Length > RAW_WIFI_FRAME_MAX_PAYLOAD_SIZE`
+        // TODO: add `frame.PayloadSpan.Length > RAW_WIFI_FRAME_MAX_PAYLOAD_SIZE`
 
         return true;
     }

@@ -6,7 +6,7 @@ namespace WiFiBroadcastNet.Devices;
 
 public interface IRadioDevice
 {
-    void AttachDataConsumer(ChannelWriter<RxFrame> receivedFramesChannel);
+    void AttachDataConsumer(Action<RxFrame> receivedFramesChannel);
 
     void StartReceiving();
 

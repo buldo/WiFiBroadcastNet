@@ -4,5 +4,5 @@ internal interface IRadioStream
 {
     public int Id { get; }
 
-    void ProcessFrame(Memory<byte> decryptedPayload);
+    void ProcessFrame(ReadOnlyMemory<byte> decryptedPayload);
 }

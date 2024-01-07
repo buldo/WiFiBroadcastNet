@@ -18,7 +18,7 @@ public class UdpTransferAccessor : IStreamAccessor
         _endPoint = endPoint;
     }
 
-    public void ProcessIncomingFrame(Memory<byte> payload)
+    public void ProcessIncomingFrame(ReadOnlyMemory<byte> payload)
     {
         if (_endPoint != null)
         {

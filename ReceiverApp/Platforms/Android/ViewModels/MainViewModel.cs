@@ -10,7 +10,6 @@ using Android.Hardware.Usb;
 using Android.OS;
 using Android.Views;
 
-using LibUsbDotNet;
 
 using ReceiverApp.Platforms.Android;
 using ReceiverApp.Platforms.Android.BackgroundService;

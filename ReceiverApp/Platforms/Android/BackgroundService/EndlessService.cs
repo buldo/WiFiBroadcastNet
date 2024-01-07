@@ -201,7 +201,7 @@ public class EndlessService : Service
     {
         try
         {
-            _driver = new WiFiDriver(_loggerFactory, false);
+            _driver = new WiFiDriver(_loggerFactory);
             var devicesProvider = new AndroidDevicesProvider(
                 _driver,
                 device,

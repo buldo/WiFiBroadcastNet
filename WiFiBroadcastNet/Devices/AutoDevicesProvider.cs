@@ -1,4 +1,6 @@
-﻿using Rtl8812auNet;
+﻿#if WINDOWS
+
+using Rtl8812auNet;
 
 namespace WiFiBroadcastNet.Devices;
 
@@ -26,3 +28,5 @@ public class AutoDevicesProvider : IDevicesProvider
         return devices;
     }
 }
+
+#endif

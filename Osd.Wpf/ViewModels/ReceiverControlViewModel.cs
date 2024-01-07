@@ -20,7 +20,7 @@ public class ReceiverControlViewModel : ObservableObject
     public ReceiverControlViewModel()
     {
         _loggerFactory = App.Current.Services.GetRequiredService<ILoggerFactory>();
-        _wifiDriver = new WiFiDriver(_loggerFactory, true);
+        _wifiDriver = new WiFiDriver(_loggerFactory);
         RefreshDevicesCommand = new RelayCommand(ExecuteRefreshDevices, CanExecuteRefreshDevices);
         ChangeChannelCommand = new RelayCommand(ExecuteChangeChannel, CanExecuteChangeChannel);
         StartCommand = new RelayCommand(ExecuteStart, CanExecuteStart);

@@ -38,7 +38,7 @@ namespace ReceiverApp
         public void InfinityRead()
         {
             var ep = GetInEp();
-            var readBuffer = new byte[8192 + 1024];
+            var readBuffer = new byte[32768];
             while (true)
             {
                 try
@@ -46,7 +46,7 @@ namespace ReceiverApp
                     int length;
                     lock (_usbConnectionLock)
                     {
-                        length = _usbDeviceConnection.BulkTransfer(ep, readBuffer, readBuffer.Length, 100);
+                        length = _usbDeviceConnection.BulkTransfer(ep, readBuffer, readBuffer.Length, 25);
                     }
 
                     if (length <0)

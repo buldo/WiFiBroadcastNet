@@ -21,6 +21,7 @@ internal class FecDecoder
     // since we also need to search this data structure, a std::queue is not enough.
     // since we have an upper limit on the size of this dequeue, it is basically a searchable ring buffer
     private readonly Deque<RxBlock> _rxQueue = new();
+    private readonly Queue<RxBlock> _freeBlocks = new();
     private UInt64 _lastKnownBlock = UInt64.MaxValue;  //id of last known block
 
     /// <summary>
@@ -141,6 +142,8 @@ internal class FecDecoder
                 _logger.LogDebug("Removing block {BlockIdx} {MissingPrimaryPackets}", front.GetBlockIdx(), front.get_missing_primary_packets_readable());
             }
         }
+
+        _freeBlocks.Enqueue(front);
     }
 
     // create a new RxBlock for the specified block_idx and push it into the queue
@@ -163,7 +166,7 @@ internal class FecDecoder
         // we can return early if this operation doesn't exceed the size limit
         if (_rxQueue.Count < _rxQueueMaxSize)
         {
-            _rxQueue.AddToBack(new RxBlock(_maxFragmentsPerBlock, blockIdx));
+            _rxQueue.AddToBack(GetReadyToWorkBlock(blockIdx));
             //stats.count_blocks_total++;
             return;
         }
@@ -180,7 +183,7 @@ internal class FecDecoder
         RxQueuePopFront();
 
         // now we are guaranteed to have space for one new block
-        _rxQueue.AddToBack(new RxBlock(_maxFragmentsPerBlock, blockIdx));
+        _rxQueue.AddToBack(GetReadyToWorkBlock(blockIdx));
         //stats.count_blocks_total++;
     }
 
@@ -318,5 +321,17 @@ internal class FecDecoder
     {
         _rxQueue.Clear();
         _lastKnownBlock = UInt64.MaxValue;
+    }
+
+    private RxBlock GetReadyToWorkBlock(UInt64 blockIdx)
+    {
+        if (!_freeBlocks.TryDequeue(out var block))
+        {
+            block = new RxBlock(_maxFragmentsPerBlock);
+        }
+
+        block.ReInit(blockIdx);
+
+        return block;
     }
 }

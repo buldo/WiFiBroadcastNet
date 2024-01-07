@@ -14,7 +14,7 @@ class RxBlock
     /// <summary>
     /// the block idx marks which block this element refers to
     /// </summary>
-    private readonly ulong _blockIdx = 0;
+    private ulong _blockIdx = 0;
 
     /// <summary>
     /// for each fragment (via fragment_idx) store if it has been received yet
@@ -45,13 +45,9 @@ class RxBlock
     // @param maxNFragmentsPerBlock max number of primary and secondary fragments for this block.
     // you could just use MAX_TOTAL_FRAGMENTS_PER_BLOCK for that, but if your tx then uses (4:8) for example, you'd
     // allocate much more memory every time for a new RX block than needed.
-    public RxBlock(int maxNFragmentsPerBlock, ulong blockIdx1)
+    public RxBlock(int maxNFragmentsPerBlock)
     {
-        _blockIdx = blockIdx1;
-
         _fragmentMap = new bool[maxNFragmentsPerBlock]; //after creation of the RxBlock every f. is marked as unavailable
-        _fragmentMap.AsSpan().Fill(FecDecodeImpl.FRAGMENT_STATUS_UNAVAILABLE);
-
         _blockBuffer = new List<byte[]>(maxNFragmentsPerBlock);
         for (int i = 0; i < maxNFragmentsPerBlock; i++)
         {
@@ -60,6 +56,24 @@ class RxBlock
 
         //assert(fragment_map.size() == blockBuffer.size());
     }
+
+    public void ReInit(ulong blockId)
+    {
+        _blockIdx = blockId;
+        _fragmentMap.AsSpan().Clear();
+        foreach (var buff in _blockBuffer)
+        {
+            buff.AsSpan().Clear();
+        }
+
+        _alreadyForwardedPrimaryFragments = 0;
+        _firstFragmentTimePoint = null;
+        _primaryFragmentsInBlock = -1;
+        _sizeOfSecondaryFragments = -1;
+        _availablePrimaryFragments = 0;
+        _availableSecondaryFragments = 0;
+    }
+
 
     //// two blocks are the same if they refer to the same block idx:
     //constexpr bool operator==(const RxBlock &other) const {

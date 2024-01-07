@@ -114,21 +114,8 @@ public class EndlessService : Service
 
         // we need this lock so our service gets not affected by Doze Mode
         var pm = GetSystemService(Context.PowerService) as PowerManager;
-        _wakeLock = pm.NewWakeLock(WakeLockFlags.Partial, "EndlessService::lock");
+        _wakeLock = pm.NewWakeLock(WakeLockFlags.Full, "EndlessService::lock");
         _wakeLock.Acquire();
-
-        // TODO: START HERE
-        // we're starting a loop in a coroutine
-        //GlobalScope.launch(Dispatchers.IO) {
-        //    while (_isServiceStarted)
-        //    {
-        //        launch(Dispatchers.IO) {
-        //            PingFakeServer();
-        //        }
-        //        delay(1 * 60 * 1000);
-        //    }
-        //    log("End of the loop for the service")
-        //}
     }
 
     private void StopService()

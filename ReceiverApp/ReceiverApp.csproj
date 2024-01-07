@@ -40,6 +40,21 @@
 	  <AndroidKeyStore>False</AndroidKeyStore>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <RunAOTCompilation>False</RunAOTCompilation>
+	  <EnableLLVM>False</EnableLLVM>
+	  <AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
+	  <AndroidEnableSGenConcurrent>False</AndroidEnableSGenConcurrent>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <RunAOTCompilation>False</RunAOTCompilation>
+	  <PublishTrimmed>False</PublishTrimmed>
+	  <EnableLLVM>False</EnableLLVM>
+	  <AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
+	  <AndroidEnableSGenConcurrent>False</AndroidEnableSGenConcurrent>
+	</PropertyGroup>
+
     <ItemGroup>
         <AndroidNativeLibrary Include="Resources\lib\arm64-v8a\libsodium.so" />
         <AndroidNativeLibrary Include="Resources\lib\armeabi-v7a\libsodium.so" />

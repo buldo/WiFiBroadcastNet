@@ -41,18 +41,8 @@
 	</PropertyGroup>
 
     <ItemGroup>
-        <AndroidNativeLibrary Include="Resources\lib\arm64-v8a\libsodium.so">
-            <Abi>arm64-v8a</Abi>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </AndroidNativeLibrary>
-        <AndroidNativeLibrary Include="Resources\lib\armeabi-v7a\libsodium.so">
-            <Abi>armeabi-v7a</Abi>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </AndroidNativeLibrary>
-        <AndroidNativeLibrary Include="Resources\lib\armeabi\libsodium.so">
-            <Abi>armeabi</Abi>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </AndroidNativeLibrary>
+        <AndroidNativeLibrary Include="Resources\lib\arm64-v8a\libsodium.so" />
+        <AndroidNativeLibrary Include="Resources\lib\armeabi-v7a\libsodium.so" />
     </ItemGroup>
 
     <ItemGroup>

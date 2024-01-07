@@ -14,7 +14,7 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
 #if ANDROID
-        //JavaSystem.LoadLibrary("sodium");
+        JavaSystem.LoadLibrary("sodium");
         //JavaSystem.LoadLibrary();
 #endif
         //NativeLibrary.SetDllImportResolver(typeof(SpaceWizards.Sodium.Interop.Libsodium).Assembly, DllImportResolver);

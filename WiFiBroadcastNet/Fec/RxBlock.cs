@@ -120,7 +120,7 @@ class RxBlock
     // copy the fragment data and mark it as available
     // you should check if it is already available with hasFragment() to avoid copying the same fragment multiple times
     // when using multiple RX cards
-    public void AddFragment(byte[] data, int dataLen)
+    public void AddFragment(ReadOnlySpan<byte> data)
     {
         var header = FecPayloadHelper.CreateFromArray(data);
 
@@ -128,7 +128,7 @@ class RxBlock
         //assert(header.block_idx == blockIdx);
         //assert(fragment_map[header.fragment_idx] == FRAGMENT_STATUS_UNAVAILABLE);
         //assert(header.fragment_idx < blockBuffer.size());
-        fragment_copy_payload(header.fragment_idx, data, dataLen);
+        fragment_copy_payload(header.fragment_idx, data);
         // mark it as available
         _fragmentMap[header.fragment_idx] = FecDecodeImpl.FRAGMENT_STATUS_AVAILABLE;
 
@@ -151,7 +151,7 @@ class RxBlock
         {
             _availableSecondaryFragments++;
             //var payload_len_including_size = dataLen - sizeof(FECPayloadHdr) + sizeof(UInt16);
-            var payloadLenIncludingSize = dataLen - 8 + sizeof(ushort);
+            var payloadLenIncludingSize = data.Length - 8 + sizeof(ushort);
             // all secondary fragments shall have the same size
             if (_sizeOfSecondaryFragments == -1)
             {
@@ -170,12 +170,12 @@ class RxBlock
     }
 
     // util to copy the packet size and payload (and not more)
-    private void fragment_copy_payload(int fragmentIdx, byte[] data, int dataLen)
+    private void fragment_copy_payload(int fragmentIdx, ReadOnlySpan<byte> data)
     {
         var buff = _blockBuffer[fragmentIdx];
-        Debug.Assert(data.AsSpan(6..dataLen).Length <= buff.Length);
+        Debug.Assert(data.Slice(6).Length <= buff.Length);
         //data.AsSpan(sizeof(FECPayloadHdr) - sizeof(UInt16))
-        data.AsSpan(6..dataLen).CopyTo(buff);
+        data.Slice(6).CopyTo(buff);
     }
 
     /**

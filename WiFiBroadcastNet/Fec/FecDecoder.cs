@@ -55,7 +55,7 @@ internal class FecDecoder
 
     //AvgCalculator m_fec_decode_time { };
 
-    public static bool validate_packet_size(int dataLen)
+    public static bool ValidatePacketSize(int dataLen)
     {
         //if (data_len < sizeof(FECPayloadHdr))
         if (dataLen < 8)
@@ -72,9 +72,9 @@ internal class FecDecoder
     }
 
     // process a valid packet
-    public bool process_valid_packet(byte[] data, int dataLen)
+    public bool ProcessValidPacket(ReadOnlySpan<byte> data)
     {
-        //assert(validate_packet_size(data_len));
+        //assert(ValidatePacketSize(data_len));
         // reconstruct the data layout
         FECPayloadHdr headerP = FecPayloadHelper.CreateFromArray(data);
         /* const uint8_t* payload_p=data+sizeof(FECPayloadHdr);
@@ -84,7 +84,7 @@ internal class FecDecoder
             _logger.LogWarning($"invalid fragment_idx: {headerP.fragment_idx}");
             return false;
         }
-        process_with_rx_queue(headerP, data, dataLen);
+        ProcessWithRxQueue(headerP, data);
         return true;
     }
 
@@ -95,7 +95,7 @@ internal class FecDecoder
      * @param discardMissingPackets : if true, gaps are ignored and fragments are forwarded even though this means the missing ones are irreversible lost
      * Be carefully with this param, use it only before you need to get rid of a block
      */
-    void ForwardMissingPrimaryFragmentsIfAvailable(RxBlock block, bool discardMissingPackets = false)
+    private void ForwardMissingPrimaryFragmentsIfAvailable(RxBlock block, bool discardMissingPackets = false)
     {
         //assert(mSendDecodedPayloadCallback);
         // TODO remove me
@@ -128,7 +128,7 @@ internal class FecDecoder
     }
 
     // also increase lost block count if block is not fully recovered
-    void RxQueuePopFront()
+    private void RxQueuePopFront()
     {
         var front = _rxQueue.RemoveFromFront();
         //assert(rx_queue.front() != nullptr);
@@ -146,7 +146,7 @@ internal class FecDecoder
     // create a new RxBlock for the specified block_idx and push it into the queue
     // NOTE: Checks first if this operation would increase the size of the queue over its max capacity
     // In this case, the only solution is to remove the oldest block before adding the new one
-    void RxRingCreateNewSafe(UInt64 blockIdx)
+    private void RxRingCreateNewSafe(UInt64 blockIdx)
     {
         // check: make sure to always put blocks into the queue in order !
         if (_rxQueue.Count != 0)
@@ -187,7 +187,7 @@ internal class FecDecoder
     // If block is already known and not in the queue anymore return nullptr
     // else if block is inside the ring return pointer to it
     // and if it is not inside the ring add as many blocks as needed, then return pointer to it
-    RxBlock? RxRingFindCreateBlockByIdx(UInt64 blockIdx)
+    private RxBlock? RxRingFindCreateBlockByIdx(UInt64 blockIdx)
     {
         var found = _rxQueue.FirstOrDefault(b => b.GetBlockIdx() == blockIdx);
         if (found != null)
@@ -225,7 +225,7 @@ internal class FecDecoder
         return _rxQueue.Last();
     }
 
-    void process_with_rx_queue(FECPayloadHdr header, byte[] data, int dataSize)
+    private void ProcessWithRxQueue(FECPayloadHdr header, ReadOnlySpan<byte> data)
     {
         var blockP = RxRingFindCreateBlockByIdx(header.block_idx);
         //ignore already processed blocks
@@ -240,7 +240,7 @@ internal class FecDecoder
         {
             return;
         }
-        block.AddFragment(data, dataSize);
+        block.AddFragment(data);
         if (block == _rxQueue.First())
         {
             //wifibroadcast::log::get_default()->debug("In front\n";

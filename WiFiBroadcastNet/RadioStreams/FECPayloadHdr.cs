@@ -1,7 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace WiFiBroadcastNet.RadioStreams;
 
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 8)]
@@ -35,8 +33,8 @@ struct FECPayloadHdr
 
 internal static class FecPayloadHelper
 {
-    public static FECPayloadHdr CreateFromArray(byte[] data)
+    public static FECPayloadHdr CreateFromArray(ReadOnlySpan<byte> data)
     {
-        return MemoryMarshal.Read<FECPayloadHdr>(data.AsSpan(0, 8));
+        return MemoryMarshal.Read<FECPayloadHdr>(data.Slice(0, 8));
     }
 }

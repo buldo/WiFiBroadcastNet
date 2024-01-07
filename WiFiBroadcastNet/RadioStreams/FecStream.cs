@@ -29,12 +29,12 @@ public class FecStream : IRadioStream
 
     public void ProcessFrame(ReadOnlyMemory<byte> decryptedPayload)
     {
-        if (!FecDecoder.validate_packet_size(decryptedPayload.Length))
+        if (!FecDecoder.ValidatePacketSize(decryptedPayload.Length))
         {
             _logger.LogDebug("invalid fec packet size {Size}", decryptedPayload.Length);
             return;
         }
 
-        _fec.process_valid_packet(decryptedPayload.ToArray(), decryptedPayload.Length);
+        _fec.ProcessValidPacket(decryptedPayload.Span);
     }
 }

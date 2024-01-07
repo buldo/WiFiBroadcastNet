@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-        <TargetFrameworks>net8.0-android;</TargetFrameworks>
+        <TargetFramework>net8.0-android</TargetFramework>
+        <!--<TargetFrameworks>net8.0-android;</TargetFrameworks>-->
         <RuntimeIdentifiers>android-arm;android-arm64</RuntimeIdentifiers>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>ReceiverApp</RootNamespace>
@@ -32,6 +33,7 @@
 	  <RunAOTCompilation>False</RunAOTCompilation>
 	  <PublishTrimmed>False</PublishTrimmed>
 	  <AndroidKeyStore>False</AndroidKeyStore>
+	  <AndroidPackageFormat>apk</AndroidPackageFormat>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
@@ -39,8 +41,16 @@
 	</PropertyGroup>
 
     <ItemGroup>
-        <AndroidNativeLibrary Include="lib\arm64-v8a\libsodium">
+        <AndroidNativeLibrary Include="Resources\lib\arm64-v8a\libsodium.so">
             <Abi>arm64-v8a</Abi>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </AndroidNativeLibrary>
+        <AndroidNativeLibrary Include="Resources\lib\armeabi-v7a\libsodium.so">
+            <Abi>armeabi-v7a</Abi>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </AndroidNativeLibrary>
+        <AndroidNativeLibrary Include="Resources\lib\armeabi\libsodium.so">
+            <Abi>armeabi</Abi>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </AndroidNativeLibrary>
     </ItemGroup>

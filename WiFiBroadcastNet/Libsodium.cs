@@ -4,7 +4,6 @@ internal static class Libsodium
     static Libsodium()
     {
         //ASodium.SodiumInit.Init();
-
     }
 
     public static int crypto_aead_chacha20poly1305_ABYTES()

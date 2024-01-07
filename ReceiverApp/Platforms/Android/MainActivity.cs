@@ -5,6 +5,7 @@ using Android.App;
 using Android.Content.PM;
 using Android.Content;
 using ReceiverApp.Platforms.Android.BackgroundService;
+using AndroidX.Core.App;
 
 namespace ReceiverApp.Platforms.Android;
 

@@ -39,7 +39,7 @@ namespace ReceiverApp
                     int length;
                     lock (_usbConnectionLock)
                     {
-                        length = _usbDeviceConnection.BulkTransfer(ep, readBuffer, readBuffer.Length, 500);
+                        length = _usbDeviceConnection.BulkTransfer(ep, readBuffer, readBuffer.Length, 50);
                     }
 
                     if (length <0)

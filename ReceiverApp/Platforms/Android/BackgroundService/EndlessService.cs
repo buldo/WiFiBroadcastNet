@@ -6,6 +6,7 @@ using Android.Content.PM;
 using Android.Hardware.Usb;
 using Android.OS;
 using Android.Widget;
+using AndroidX.Core.App;
 using Bld.WlanUtils;
 using Microsoft.Extensions.Logging;
 
@@ -78,7 +79,7 @@ public class EndlessService : Service
         base.OnCreate();
         //log("The service has been created".toUpperCase());
         var notification = CreateNotification();
-        StartForeground(1, notification);
+        StartForeground(1, notification, ForegroundService.TypeDataSync);
     }
 
     public override void OnDestroy()
@@ -149,39 +150,6 @@ public class EndlessService : Service
         }
         _isServiceStarted = false;
         this.setServiceState(ServiceState.STOPPED);
-    }
-
-    private void PingFakeServer()
-    {
-        //var df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.mmmZ");
-        //var gmtTime = df.format(Date());
-
-        //var deviceId = Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID);
-
-        var json =
-            """
-                {
-                    "deviceId": "$deviceId",
-                    "createdAt": "$gmtTime"
-                }
-            """;
-        try
-        {
-            //Fuel.post("https://jsonplaceholder.typicode.com/posts")
-            //    .jsonBody(json)
-            //    .response { _, _, result ->
-            //        val (bytes, error) = result
-            //        if (bytes != null) {
-            //            //log("[response bytes] ${String(bytes)}")
-            //        } else {
-            //            //log("[response error] ${error?.message}")
-            //        }
-            //    }
-        }
-        catch (Exception e)
-        {
-            //log("Error making the request: ${e.message}")
-        }
     }
 
     private Notification CreateNotification()

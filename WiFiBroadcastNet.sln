@@ -33,7 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenHd", "OpenHd", "{710B4D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenHd.Fec.Benchmarks", "OpenHd.Fec.Benchmarks\OpenHd.Fec.Benchmarks.csproj", "{34DFD5E5-6B97-40AD-96D6-EAF183806091}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Osd.Wpf", "Osd.Wpf\Osd.Wpf.csproj", "{623FEBCB-8089-4650-8F5C-9EE727B3DEE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Osd.Wpf", "Osd.Wpf\Osd.Wpf.csproj", "{623FEBCB-8089-4650-8F5C-9EE727B3DEE5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

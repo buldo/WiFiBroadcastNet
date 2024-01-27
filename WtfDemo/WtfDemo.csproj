@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+    <ProjectReference Include="..\Bld.RtpToWebRtcRestreamer\Bld.RtpToWebRtcRestreamer.csproj" />
     <ProjectReference Include="..\CommonAbstractions\CommonAbstractions.csproj" />
     <ProjectReference Include="..\CommonControls.Wpf\CommonControls.Wpf.csproj" />
     <ProjectReference Include="..\CommonViewModels\CommonViewModels.csproj" />

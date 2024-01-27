@@ -28,7 +28,7 @@ public class WfbHost : IWfbHost
 
     public void Start(WlanChannel startChannel)
     {
-        if (_iface == null)
+        if (_iface != null)
         {
             return;
         }
@@ -64,9 +64,11 @@ public class WfbHost : IWfbHost
             {
                 StreamId = RadioPorts.VIDEO_PRIMARY_RADIO_PORT,
                 IsFecEnabled = true,
-                StreamAccessor = new UdpTransferAccessor(
-                    factory.CreateLogger<UdpTransferAccessor>(),
-                    new IPEndPoint(IPAddress.Loopback, 5600)),
+                StreamAccessor = new WtfTransferAccessor(
+                    loggerFactory: _loggerFactory,
+                    new IPEndPoint(IPAddress.Parse("192.168.42.5"), 42069)
+                    //new IPEndPoint(IPAddress.Loopback, 42069)
+                    ),
             },
             //new()
             //{

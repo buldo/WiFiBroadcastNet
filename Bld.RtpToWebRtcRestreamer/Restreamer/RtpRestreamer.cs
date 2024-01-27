@@ -1,108 +1,58 @@
-﻿using System.Net;
+﻿using System.Buffers.Binary;
+using System.Net;
 using System.Net.Sockets;
-using Bld.RtpToWebRtcRestreamer.RtpNg.Networking;
 using Bld.RtpToWebRtcRestreamer.RtpNg.Rtp;
-using Bld.RtpToWebRtcRestreamer.RtpNg.WebRtc;
-using Bld.RtpToWebRtcRestreamer.SIPSorcery.Net.RTP;
-using Bld.RtpToWebRtcRestreamer.SIPSorcery.Net.SDP;
-using Bld.RtpToWebRtcRestreamer.SIPSorcery.Net.WebRTC;
 using Microsoft.Extensions.Logging;
-using SIPSorceryMedia.Abstractions;
 
 namespace Bld.RtpToWebRtcRestreamer.Restreamer;
 
-internal class RtpRestreamer
+public class RtpRestreamer
 {
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<RtpRestreamer> _logger;
     private readonly PooledUdpSource _receiver;
-    private readonly StreamMultiplexer _streamMultiplexer;
+    private readonly TcpClient _tcpClient = new TcpClient();
+    private readonly NetworkStream _stream;
 
     public RtpRestreamer(
-        IPEndPoint rtpListenEndpoint,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IPEndPoint remoteIp)
     {
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<RtpRestreamer>();
 
-        _receiver = new PooledUdpSource(rtpListenEndpoint, _loggerFactory.CreateLogger<PooledUdpSource>());
-        _streamMultiplexer = new StreamMultiplexer(_loggerFactory.CreateLogger<StreamMultiplexer>());
-    }
-
-    public bool IsStarted { get; private set; }
-
-    public void Start()
-    {
-        if (IsStarted)
-        {
-            return;
-        }
-
-        IsStarted = true;
-
+        _receiver = new PooledUdpSource(_loggerFactory.CreateLogger<PooledUdpSource>());
         _receiver.Start(RtpProcessorAsync);
+
+        _tcpClient.Connect(remoteIp);
+        _stream = _tcpClient.GetStream();
+        var header = CreateConnectHeader();
+        _stream.Write(header);
     }
 
-    public async Task StopAsync()
+    private void RtpProcessorAsync(RtpPacket packet)
     {
-        if (!IsStarted)
-        {
-            return;
-        }
+        var lenArray = new byte[4];
+        BinaryPrimitives.WriteInt32LittleEndian(lenArray.AsSpan(), packet.Payload.Length);
+        _stream.Write(lenArray);
+        _stream.Write(packet.Payload);
 
-        IsStarted = false;
-        await _receiver.StopAsync();
-        foreach (var peerConnection in _streamMultiplexer.GetAllPeers())
-        {
-            await _streamMultiplexer.ClosePeerAsync(peerConnection.Peer.Id);
-        }
-    }
-
-    public async Task<(Guid PeerId, string Sdp)> AppendClient()
-    {
-        var videoTrack = new MediaStreamTrack(
-            new VideoFormat(VideoCodecsEnum.H264, 96),
-            MediaStreamStatusEnum.SendOnly);
-        var socket = new UdpSocket(new UdpClient(new IPEndPoint(IPAddress.Any, 0)), _loggerFactory.CreateLogger<UdpSocket>());
-        var peerConnection = new RtcPeerConnection(videoTrack, socket, PeerConnectionChangeHandler);
-        _streamMultiplexer.RegisterPeer(peerConnection);
-
-        var answer = peerConnection.CreateOffer();
-
-        return (peerConnection.Id, answer.sdp);
-    }
-
-    private async Task PeerConnectionChangeHandler(RtcPeerConnection peerConnection, RTCPeerConnectionState state)
-    {
-        _logger.LogDebug("Peer connection state change to {state}.", state);
-
-        if (state == RTCPeerConnectionState.connected)
-        {
-            _streamMultiplexer.StartPeerTransmit(peerConnection.Id);
-        }
-        else if (state == RTCPeerConnectionState.failed || state == RTCPeerConnectionState.disconnected)
-        {
-            await _streamMultiplexer.ClosePeerAsync(peerConnection.Id);
-        }
-    }
-
-    public async Task ProcessClientAnswerAsync(Guid peerId, string sdpString)
-    {
-        var peer = _streamMultiplexer.GetById(peerId);
-        if (peer != null)
-        {
-            var result = peer.Peer.SetRemoteDescription(new RTCSessionDescriptionInit
-            {
-                sdp = sdpString,
-                type = RTCSdpType.answer
-            });
-            _logger.LogDebug("SetRemoteDescription result: {@result}", result);
-        }
-    }
-
-    private async Task RtpProcessorAsync(RtpPacket packet)
-    {
-        await _streamMultiplexer.SendVideoPacketAsync(packet);
         _receiver.ReusePacket(packet);
+    }
+
+    public void ApplyPacket(ReadOnlyMemory<byte> payload)
+    {
+        _receiver.ReceiveRoutine(payload);
+    }
+
+    private byte[] CreateConnectHeader()
+    {
+        var header = new byte[4*4];
+        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(0,4), 0x00042069);
+        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(3,4), 1280);
+        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(7, 4), 720);
+        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(11, 4), 30);
+
+        return header;
     }
 }

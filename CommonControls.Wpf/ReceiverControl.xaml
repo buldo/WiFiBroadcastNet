@@ -1,13 +1,12 @@
-﻿<UserControl x:Class="Osd.Wpf.Views.ReceiverControl"
+﻿<UserControl x:Class="CommonControls.Wpf.ReceiverControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Osd.Wpf.Views"
-             xmlns:viewModels="clr-namespace:Osd.Wpf.ViewModels"
+             xmlns:commonViewModels="clr-namespace:CommonViewModels;assembly=CommonViewModels"
              xmlns:wlanUtils="clr-namespace:Bld.WlanUtils;assembly=Bld.WlanUtils"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance viewModels:ReceiverControlViewModel}"
+             d:DataContext="{d:DesignInstance commonViewModels:ReceiverControlViewModel}"
              d:DesignHeight="600" d:DesignWidth="240">
     <Grid>
         <Grid.RowDefinitions>

@@ -1,5 +1,10 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommonViewModels;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+using Osd.Wpf.Services;
+using Rtl8812auNet;
 
 namespace Osd.Wpf.ViewModels;
 
@@ -8,7 +13,11 @@ public class MainViewModel : ObservableObject
     public MainViewModel()
     {
         Osd = new();
-        ReceiverControl = new();
+
+        var loggerFactory = App.Current.Services.GetRequiredService<ILoggerFactory>();
+        var driver = new WiFiDriver(loggerFactory);
+        var host = new WfbHost(driver, loggerFactory);
+        ReceiverControl = new(host);
         ReceiverControl.Started += ReceiverControlOnStarted;
     }
 

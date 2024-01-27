@@ -7,6 +7,7 @@
         xmlns:wpf="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
         xmlns:viewModels="clr-namespace:Osd.Wpf.ViewModels"
         xmlns:views="clr-namespace:Osd.Wpf.Views"
+        xmlns:wpf1="clr-namespace:CommonControls.Wpf;assembly=CommonControls.Wpf"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance viewModels:MainViewModel}"
         Title="MainWindow" Height="450" Width="800">
@@ -21,7 +22,7 @@
             VerticalAlignment="Stretch"
             DataContext="{Binding Osd}">
         </views:OsdVideoControl>
-        <views:ReceiverControl
+        <wpf1:ReceiverControl
             Grid.Column="1"
             DataContext="{Binding ReceiverControl}"/>
     </Grid>

@@ -19,6 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CommonControls.Wpf\CommonControls.Wpf.csproj" />
+    <ProjectReference Include="..\CommonViewModels\CommonViewModels.csproj" />
     <ProjectReference Include="..\WiFiBroadcastNet\WiFiBroadcastNet.csproj" />
   </ItemGroup>
 

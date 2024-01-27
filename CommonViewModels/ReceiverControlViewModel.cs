@@ -1,26 +1,18 @@
-﻿using System.Collections.ObjectModel;
+﻿using CommonAbstractions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Osd.Wpf.Services;
-using Rtl8812auNet;
-
-namespace Osd.Wpf.ViewModels;
+namespace CommonViewModels;
 
 public class ReceiverControlViewModel : ObservableObject
 {
-    private readonly WiFiDriver _wifiDriver;
-    private WfbHost _wfbHost;
+    private readonly IWfbHost _wfbHost;
     private int _devicesCount;
     private bool _isStarted;
-    private readonly ILoggerFactory _loggerFactory;
 
-    public ReceiverControlViewModel()
+    public ReceiverControlViewModel(IWfbHost host)
     {
-        _loggerFactory = App.Current.Services.GetRequiredService<ILoggerFactory>();
-        _wifiDriver = new WiFiDriver(_loggerFactory);
+        _wfbHost = host;
         RefreshDevicesCommand = new RelayCommand(ExecuteRefreshDevices, CanExecuteRefreshDevices);
         ChangeChannelCommand = new RelayCommand(ExecuteChangeChannel, CanExecuteChangeChannel);
         StartCommand = new RelayCommand(ExecuteStart, CanExecuteStart);
@@ -68,7 +60,7 @@ public class ReceiverControlViewModel : ObservableObject
 
     private void UpdateDevicesList()
     {
-        DevicesCount = _wifiDriver.GetUsbDevices().Count;
+        DevicesCount = _wfbHost.GetDevicesCount();
     }
 
     private void ExecuteRefreshDevices()
@@ -104,13 +96,12 @@ public class ReceiverControlViewModel : ObservableObject
     private void ExecuteStart()
     {
         IsStarted = true;
-        _wfbHost = new WfbHost(_wifiDriver, _loggerFactory);
         _wfbHost.Start(ChannelsSelector.SelectedChannel);
         OnStarted();
     }
 
     public void Stop()
     {
-        _wifiDriver.Dispose();
+        _wfbHost.Stop();
     }
 }

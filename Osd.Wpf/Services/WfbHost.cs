@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Bld.WlanUtils;
+using CommonAbstractions;
 using Microsoft.Extensions.Logging;
 using Rtl8812auNet;
 using WiFiBroadcastNet;
@@ -7,28 +8,52 @@ using WiFiBroadcastNet.Devices;
 
 namespace Osd.Wpf.Services;
 
-public class WfbHost
+public class WfbHost : IWfbHost
 {
-    private readonly WfbLink _iface;
+    private readonly WiFiDriver _wifiDriver;
+    private readonly ILoggerFactory _loggerFactory;
+
+    private WfbLink? _iface;
 
     public WfbHost(WiFiDriver wifiDriver, ILoggerFactory loggerFactory)
     {
-        var devicesProvider = new AutoDevicesProvider(wifiDriver);
-        _iface = new WfbLink(
-            devicesProvider,
-            CreateAccessors(loggerFactory),
-            loggerFactory.CreateLogger<WfbLink>());
+        _wifiDriver = wifiDriver;
+        _loggerFactory = loggerFactory;
+    }
+
+    public int GetDevicesCount()
+    {
+        return _wifiDriver.GetUsbDevices().Count;
     }
 
     public void Start(WlanChannel startChannel)
     {
+        if (_iface == null)
+        {
+            return;
+        }
+
+        var devicesProvider = new AutoDevicesProvider(_wifiDriver);
+        _iface = new WfbLink(
+            devicesProvider,
+            CreateAccessors(_loggerFactory),
+            _loggerFactory.CreateLogger<WfbLink>());
+
         _iface.Start();
         _iface.SetChannel(startChannel);
     }
 
     public void SetChannel(WlanChannel channel)
     {
-        _iface.SetChannel(channel);
+        if (_iface != null)
+        {
+            _iface.SetChannel(channel);
+        }
+    }
+
+    public void Stop()
+    {
+        //throw new NotImplementedException();
     }
 
     private List<UserStream> CreateAccessors(ILoggerFactory factory)

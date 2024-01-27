@@ -1,7 +1,7 @@
 ﻿using Bld.WlanUtils;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Osd.Wpf.ViewModels;
+namespace CommonViewModels;
 
 public class ChannelsListViewModel : ObservableObject
 {

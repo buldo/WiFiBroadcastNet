@@ -51,7 +51,7 @@ public class RtpRestreamer
         BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(0,4), 0x00042069);
         BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(3,4), 1280);
         BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(7, 4), 720);
-        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(11, 4), 30);
+        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(11, 4), 60);
 
         return header;
     }

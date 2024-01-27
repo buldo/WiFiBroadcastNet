@@ -8,4 +8,17 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="libsodium" Version="1.0.19" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+    <ProjectReference Include="..\CommonAbstractions\CommonAbstractions.csproj" />
+    <ProjectReference Include="..\CommonControls.Wpf\CommonControls.Wpf.csproj" />
+    <ProjectReference Include="..\CommonViewModels\CommonViewModels.csproj" />
+  </ItemGroup>
+
 </Project>

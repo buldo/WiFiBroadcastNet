@@ -4,9 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WtfDemo"
+        xmlns:wpf="clr-namespace:CommonControls.Wpf;assembly=CommonControls.Wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="200" ResizeMode="NoResize">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <wpf:ReceiverControl
+            Grid.Row="0"
+            DataContext="{Binding ReceiverControl}"/>
 
     </Grid>
 </Window>

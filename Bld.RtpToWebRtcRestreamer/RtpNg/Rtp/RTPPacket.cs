@@ -5,8 +5,8 @@ internal class RtpPacket
 {
     private readonly RtpHeader _header = new();
     private byte[]? _dataBuffer;
-    private Memory<byte> _rawPacket;
-    private Memory<byte> _payload;
+    private ReadOnlyMemory<byte> _rawPacket;
+    private ReadOnlyMemory<byte> _payload;
     private bool _isReadyToUse;
 
     public RtpHeader Header
@@ -50,6 +50,20 @@ internal class RtpPacket
         _isReadyToUse = true;
     }
 
+    public void ApplyBuffer(ReadOnlyMemory<byte> data)
+    {
+        if (_isReadyToUse)
+        {
+            throw new Exception("RtpPacket already handle data");
+        }
+
+        _rawPacket = data;
+
+        _header.ApplyData(_rawPacket.Span);
+        _payload = _rawPacket[_header.Length..];
+        _isReadyToUse = true;
+    }
+
     public byte[] ReleaseBuffer()
     {
         if (!_isReadyToUse)
@@ -63,10 +77,5 @@ internal class RtpPacket
         _rawPacket = null;
         _payload = null;
         return temp;
-    }
-
-    public void ApplyHeaderChanges()
-    {
-        Header.WriteTo(_dataBuffer);
     }
 }

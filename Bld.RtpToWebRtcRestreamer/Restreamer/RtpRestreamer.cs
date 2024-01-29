@@ -10,9 +10,9 @@ public class RtpRestreamer
 {
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<RtpRestreamer> _logger;
-    private readonly PooledUdpSource _receiver;
     private readonly TcpClient _tcpClient = new TcpClient();
     private readonly NetworkStream _stream;
+    private readonly H264Depacketiser _h264Depacketiser = new();
 
     public RtpRestreamer(
         ILoggerFactory loggerFactory,
@@ -21,28 +21,29 @@ public class RtpRestreamer
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<RtpRestreamer>();
 
-        _receiver = new PooledUdpSource(_loggerFactory.CreateLogger<PooledUdpSource>());
-        _receiver.Start(RtpProcessorAsync);
-
         _tcpClient.Connect(remoteIp);
         _stream = _tcpClient.GetStream();
         var header = CreateConnectHeader();
         _stream.Write(header);
     }
 
-    private void RtpProcessorAsync(RtpPacket packet)
-    {
-        var lenArray = new byte[4];
-        BinaryPrimitives.WriteInt32LittleEndian(lenArray.AsSpan(), packet.Payload.Length);
-        _stream.Write(lenArray);
-        _stream.Write(packet.Payload);
-
-        _receiver.ReusePacket(packet);
-    }
-
     public void ApplyPacket(ReadOnlyMemory<byte> payload)
     {
-        _receiver.ReceiveRoutine(payload);
+        var packet = new RtpPacket();
+        packet.ApplyBuffer(payload);
+        var result = _h264Depacketiser.ProcessRtpPayload(
+            packet.Payload.ToArray(),
+            packet.Header.SequenceNumber,
+            packet.Header.Timestamp,
+            packet.Header.MarkerBit, out var isKeyframe);
+
+        if (result != null)
+        {
+            var lenArray = new byte[4];
+            BinaryPrimitives.WriteInt32LittleEndian(lenArray.AsSpan(), result.Length);
+            _stream.Write(lenArray);
+            _stream.Write(result);
+        }
     }
 
     private byte[] CreateConnectHeader()

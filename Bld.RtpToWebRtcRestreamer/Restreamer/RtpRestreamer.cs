@@ -21,9 +21,11 @@ public class RtpRestreamer
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<RtpRestreamer>();
 
+        var header = CreateConnectHeader();
+
         _tcpClient.Connect(remoteIp);
         _stream = _tcpClient.GetStream();
-        var header = CreateConnectHeader();
+
         _stream.Write(header);
     }
 
@@ -50,9 +52,9 @@ public class RtpRestreamer
     {
         var header = new byte[4*4];
         BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(0,4), 0x00042069);
-        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(3,4), 1280);
-        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(7, 4), 720);
-        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(11, 4), 60);
+        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(4,4), 1280);
+        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(8, 4), 720);
+        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(12, 4), 60);
 
         return header;
     }

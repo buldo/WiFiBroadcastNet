@@ -172,7 +172,7 @@ public class EndlessService : Service
             .SetContentTitle("Endless Service")
             .SetContentText("This is your favorite endless service working")
             .SetContentIntent(pendingIntent)
-            .SetSmallIcon(_Microsoft.Android.Resource.Designer.ResourceConstant.Drawable.ic_clear_black_24)
+            .SetSmallIcon(_Microsoft.Android.Resource.Designer.ResourceConstant.Drawable.dotnet_bot)
             .SetTicker("Ticker text")
             .SetOngoing(true)
             .Build();

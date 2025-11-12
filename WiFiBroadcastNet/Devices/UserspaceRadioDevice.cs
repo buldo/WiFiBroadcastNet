@@ -1,4 +1,6 @@
-﻿using System.Threading.Channels;
+﻿#if WINDOWS
+
+using System.Threading.Channels;
 using Bld.WlanUtils;
 using Rtl8812auNet;
 using Rtl8812auNet.Rtl8812au;
@@ -75,3 +77,5 @@ public class UserspaceRadioDevice : IRadioDevice
         };
     }
 }
+
+#endif

@@ -1,0 +1,26 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Clients/">
+    <Project Path="WiFiBroadcastNet.GroundHost/WiFiBroadcastNet.GroundHost.csproj" />
+  </Folder>
+  <Folder Name="/OpenHd/">
+    <Project Path="OpenHd.Fec.Benchmarks/OpenHd.Fec.Benchmarks.csproj" />
+    <Project Path="OpenHd.Fec.Tests/OpenHd.Fec.Tests.csproj" />
+    <Project Path="OpenHd.Fec/OpenHd.Fec.csproj" />
+    <Project Path="SpaceWizards.Sodium.Interop/SpaceWizards.Sodium.Interop.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Folder Name="/TestApplications/">
+    <Project Path="PerformanceTester/PerformanceTester.csproj" />
+    <Project Path="SendSinglePacketDemo/SendSinglePacketDemo.csproj" />
+  </Folder>
+  <Project Path="WiFiBroadcastNet/WiFiBroadcastNet.csproj" />
+</Solution>

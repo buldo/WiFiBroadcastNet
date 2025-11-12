@@ -1,0 +1,4 @@
+[submodule "SharpVideo"]
+	path = SharpVideo
+	url = git@github.com:buldo/SharpVideo.git
+	branch = master

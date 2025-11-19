@@ -2,3 +2,7 @@
 	path = SharpVideo
 	url = git@github.com:buldo/SharpVideo.git
 	branch = master
+[submodule "wlan-utils"]
+	path = wlan-utils
+	url = git@github.com:buldo/wlan-utils.git
+	branch = master

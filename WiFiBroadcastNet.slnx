@@ -6,6 +6,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Clients/">
+    <Project Path="OpenHd.Ui/OpenHd.Ui.csproj" Id="9e1dc59c-5404-4a2b-a9d1-94c501f88a96" />
     <Project Path="WiFiBroadcastNet.GroundHost/WiFiBroadcastNet.GroundHost.csproj" />
   </Folder>
   <Folder Name="/OpenHd/">

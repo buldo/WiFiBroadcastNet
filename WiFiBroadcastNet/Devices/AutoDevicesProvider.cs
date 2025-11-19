@@ -1,5 +1,4 @@
 ﻿#if WINDOWS
-
 using Rtl8812auNet;
 
 namespace WiFiBroadcastNet.Devices;
@@ -28,5 +27,29 @@ public class AutoDevicesProvider : IDevicesProvider
         return devices;
     }
 }
+#else
+namespace WiFiBroadcastNet.Devices;
 
+public class AutoDevicesProvider : IDevicesProvider
+{
+    private readonly RadioDeviceFactory _radioDeviceFactory;
+
+    public AutoDevicesProvider(
+        RadioDeviceFactory radioDeviceFactory)
+    {
+        _radioDeviceFactory = radioDeviceFactory;
+    }
+
+    public List<IRadioDevice> GetDevices()
+    {
+        List<IRadioDevice> devices = new();
+        var adapters = _radioDeviceFactory.GetWifiAdapters();
+        foreach (var adapter in adapters)
+        {
+            var pcapDev = _radioDeviceFactory.CreateDeviceByName()
+        }
+
+        return devices;
+    }
+}
 #endif

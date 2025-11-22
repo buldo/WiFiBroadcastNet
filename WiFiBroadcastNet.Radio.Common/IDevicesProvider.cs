@@ -1,4 +1,4 @@
-﻿namespace WiFiBroadcastNet.Devices;
+﻿namespace WiFiBroadcastNet.Radio.Common;
 
 public interface IDevicesProvider
 {

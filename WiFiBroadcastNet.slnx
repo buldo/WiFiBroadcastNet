@@ -23,5 +23,13 @@
     <Project Path="PerformanceTester/PerformanceTester.csproj" />
     <Project Path="SendSinglePacketDemo/SendSinglePacketDemo.csproj" />
   </Folder>
+  <Folder Name="/WlanUtils/">
+    <Project Path="../wlan-utils/src/Bld.Libnl/Bld.Libnl.csproj" />
+    <Project Path="../wlan-utils/src/Bld.NetworkManager/Bld.NetworkManager.csproj" />
+    <Project Path="../wlan-utils/src/Bld.WlanUtils/Bld.WlanUtils.csproj" />
+  </Folder>
+  <Project Path="WiFiBroadcastNet.Radio.Common/WiFiBroadcastNet.Radio.Common.csproj" Id="c3d2abc0-f78f-4199-b60c-724fd00e7d9f" />
+  <Project Path="WiFiBroadcastNet.Radio.LinuxPcap/WiFiBroadcastNet.Radio.LinuxPcap.csproj" Id="77e202ad-04ac-4d9a-bb3b-bbe53faf9c47" />
+  <Project Path="WiFiBroadcastNet.Radio.ManagedDriver/WiFiBroadcastNet.Radio.ManagedDriver.csproj" Id="d76f62da-e092-477e-8262-d4936af83a35" />
   <Project Path="WiFiBroadcastNet/WiFiBroadcastNet.csproj" />
 </Solution>

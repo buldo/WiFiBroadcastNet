@@ -1,55 +1,30 @@
-﻿#if WINDOWS
+﻿using Microsoft.Extensions.Logging;
+using WiFiBroadcastNet.Radio.Common;
+
+#if WINDOWS
 using Rtl8812auNet;
-
-namespace WiFiBroadcastNet.Devices;
-
-public class AutoDevicesProvider : IDevicesProvider
-{
-    private readonly WiFiDriver _wiFiDriver;
-
-    public AutoDevicesProvider(
-        WiFiDriver wiFiDriver)
-    {
-        _wiFiDriver = wiFiDriver;
-    }
-
-    public List<IRadioDevice> GetDevices()
-    {
-        var usbDevices = _wiFiDriver.GetUsbDevices();
-        List<IRadioDevice> devices = new();
-        foreach (var device in usbDevices)
-        {
-            var rtlDevice = _wiFiDriver.CreateRtlDevice(device);
-            var wrapper = new UserspaceRadioDevice(rtlDevice);
-            devices.Add(wrapper);
-        }
-
-        return devices;
-    }
-}
+using WiFiBroadcastNet.Radio.ManagedDriver;
 #else
+using WiFiBroadcastNet.Radio.LinuxPcap;
+#endif
+
 namespace WiFiBroadcastNet.Devices;
 
 public class AutoDevicesProvider : IDevicesProvider
 {
-    private readonly RadioDeviceFactory _radioDeviceFactory;
+    private readonly IDevicesProvider _devicesProvider;
 
-    public AutoDevicesProvider(
-        RadioDeviceFactory radioDeviceFactory)
+    public AutoDevicesProvider(ILoggerFactory loggerFactory)
     {
-        _radioDeviceFactory = radioDeviceFactory;
+#if WINDOWS
+        _devicesProvider = new UserspaceDevicesProvider(new WiFiDriver(loggerFactory));
+#else
+        _devicesProvider = new PcapDevicesProvider(loggerFactory);
+#endif
     }
 
     public List<IRadioDevice> GetDevices()
     {
-        List<IRadioDevice> devices = new();
-        var adapters = _radioDeviceFactory.GetWifiAdapters();
-        foreach (var adapter in adapters)
-        {
-            var pcapDev = _radioDeviceFactory.CreateDeviceByName()
-        }
-
-        return devices;
+        return _devicesProvider.GetDevices();
     }
 }
-#endif

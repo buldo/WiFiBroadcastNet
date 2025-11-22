@@ -1,6 +1,6 @@
-﻿namespace WiFiBroadcastNet.GroundHost;
+﻿namespace WiFiBroadcastNet;
 
-public static class RadioPorts
+public static class OpenHdRadioPorts
 {
     public static byte VIDEO_PRIMARY_RADIO_PORT { get; } = 10;
 

@@ -1,6 +1,4 @@
-﻿using System.Threading.Channels;
-using Bld.WlanUtils;
-using WiFiBroadcastNet.Devices;
+﻿using WiFiBroadcastNet.Radio.Common;
 
 namespace WiFiBroadcastNet;
 
@@ -21,8 +19,8 @@ internal class DeviceHandler
         _device.StartReceiving();
     }
 
-    public void SetChannel(WlanChannel wlanChannel)
+    public void SetChannelFrequency(ChannelFrequency wlanChannel)
     {
-        _device.SetChannel(wlanChannel);
+        _device.SetChannelFrequency(wlanChannel);
     }
 }

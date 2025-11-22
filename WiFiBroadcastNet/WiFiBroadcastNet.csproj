@@ -10,17 +10,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bld.Libnl.Net" Version="0.0.0-alpha.0.39" />
-    <PackageReference Include="Bld.Rtl8812auNet" Version="1.5.0" Condition="$(TargetFramework.Contains('windows'))" />
-    <PackageReference Include="Bld.WlanUtils" Version="0.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageReference Include="Nito.Collections.Deque" Version="1.2.1" />
-    <PackageReference Include="SharpPcap" Version="6.3.1" />
-    <PackageReference Include="System.Threading.Channels" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OpenHd.Fec\OpenHd.Fec.csproj" />
     <ProjectReference Include="..\SpaceWizards.Sodium.Interop\SpaceWizards.Sodium.Interop.csproj" />
+    <ProjectReference Include="..\WiFiBroadcastNet.Radio.Common\WiFiBroadcastNet.Radio.Common.csproj" />
+    <ProjectReference Include="..\WiFiBroadcastNet.Radio.LinuxPcap\WiFiBroadcastNet.Radio.LinuxPcap.csproj" Condition="!$(TargetFramework.Contains('windows'))" />
+    <ProjectReference Include="..\WiFiBroadcastNet.Radio.ManagedDriver\WiFiBroadcastNet.Radio.ManagedDriver.csproj" Condition="$(TargetFramework.Contains('windows'))" />
   </ItemGroup>
 
 </Project>

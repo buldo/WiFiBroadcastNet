@@ -1,8 +1,4 @@
-﻿using System;
-using System.Buffers.Binary;
-using System.Threading.Tasks;
-
-namespace WiFiBroadcastNet;
+﻿namespace WiFiBroadcastNet.Radio.Common;
 
 public class RxFrame
 {
@@ -56,69 +52,11 @@ public class RxFrame
         return data;
     }
 
-    public RadioPort get_valid_radio_port()
-    {
-        return RadioPort.FromByte(MacSrcRadioPort[0]);
-    }
-
-    public bool IsValidWfbFrame()
-    {
-        if (Data.Length <= 0)
-        {
-            return false;
-        }
-
-        if (!IsDataFrame())
-        {
-            return false;
-        }
-
-        if (PayloadSpan.Length == 0)
-        {
-            return false;
-        }
-
-        if (!HasValidAirGndId())
-        {
-            return false;
-        }
-
-        if (!HasValidRadioPort())
-        {
-            return false;
-        }
-
-        // TODO: add `frame.PayloadSpan.Length > RAW_WIFI_FRAME_MAX_PAYLOAD_SIZE`
-
-        return true;
-    }
-
-    public byte GetValidAirGndId()
-    {
-        return MacSrcUniqueIdPart[0];
-    }
-
     /// <summary>
     /// WiFi "Frame Control" value is "QoS Data"
     /// </summary>
-    private bool IsDataFrame()
+    public bool IsDataFrame()
     {
         return ControlField[0] == _dataHeader[0] && ControlField[1] == _dataHeader[1];
-    }
-
-    /// <summary>
-    /// Check - first byte of scr and dst mac needs to mach (unique air / gnd id)
-    /// </summary>
-    private bool HasValidAirGndId()
-    {
-        return MacSrcUniqueIdPart[0] == MacDstUniqueIdPart[0];
-    }
-
-    /// <summary>
-    /// Check - last byte of src and dst mac needs to match (radio port)
-    /// </summary>
-    private bool HasValidRadioPort()
-    {
-        return MacSrcRadioPort[0] == MacDstRadioPort[0];
     }
 }

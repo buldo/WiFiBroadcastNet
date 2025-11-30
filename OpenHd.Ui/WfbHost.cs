@@ -10,14 +10,16 @@ namespace OpenHd.Ui;
 
 public class WfbHost : IHostedService
 {
+    private readonly ILoggerFactory _loggerFactory;
     private readonly WfbLink _iface;
 
     public WfbHost(ILoggerFactory loggerFactory)
     {
+        _loggerFactory = loggerFactory;
         var devicesProvider = new AutoDevicesProvider(loggerFactory);
         _iface = new WfbLink(
             devicesProvider,
-            CreateAccessors(loggerFactory),
+            CreateAccessors(),
             loggerFactory.CreateLogger<WfbLink>());
     }
 
@@ -34,18 +36,16 @@ public class WfbHost : IHostedService
         return Task.CompletedTask;
     }
 
-    private List<UserStream> CreateAccessors(ILoggerFactory factory)
+    private List<UserStream> CreateAccessors()
     {
         return new List<UserStream>
         {
-            //new()
-            //{
-            //    StreamId = OpenHdRadioPorts.VIDEO_PRIMARY_RADIO_PORT,
-            //    IsFecEnabled = true,
-            //    StreamAccessor = new UdpTransferAccessor(
-            //        factory.CreateLogger<UdpTransferAccessor>(),
-            //        new IPEndPoint(IPAddress.Parse("192.168.88.183"), 5600)),
-            //},
+            new()
+            {
+                StreamId = OpenHdRadioPorts.VIDEO_PRIMARY_RADIO_PORT,
+                IsFecEnabled = true,
+                StreamAccessor = new DummyStreamAccessor(_loggerFactory.CreateLogger<DummyStreamAccessor>()),
+            },
             //new()
             //{
             //    StreamId = RadioPorts.VIDEO_SECONDARY_RADIO_PORT,

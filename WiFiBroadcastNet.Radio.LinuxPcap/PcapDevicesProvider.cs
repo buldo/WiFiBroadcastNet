@@ -33,8 +33,12 @@ public class PcapDevicesProvider : IDevicesProvider
             selectedDevice.CurrentInterfaceMode
         );
 
-        _wlanManager.TrySwitchToMonitorAsync(selectedDevice).GetAwaiter().GetResult();
-        _wlanManager.SetChannel(selectedDevice, ChannelFrequencies.Width20MHz.Ch149Fr5745.Frequency, ChannelModes.ModeHt20);
+        if (selectedDevice.CurrentInterfaceMode != Nl80211InterfaceType.NL80211_IFTYPE_MONITOR)
+        {
+            _wlanManager.TrySwitchToMonitorAsync(selectedDevice).GetAwaiter().GetResult();
+        }
+
+        //_wlanManager.SetChannel(selectedDevice, ChannelFrequencies.Width20MHz.Ch149Fr5745.Frequency, ChannelModes.ModeHt20);
         var pcapDevice = LibPcapLiveDeviceList.Instance[selectedDevice.InterfaceName];
         return [new PcapRadioDevice(selectedDevice, pcapDevice, _wlanManager)];
     }

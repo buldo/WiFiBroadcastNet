@@ -22,4 +22,10 @@
     <ProjectReference Include="..\WiFiBroadcastNet.Radio.ManagedDriver\WiFiBroadcastNet.Radio.ManagedDriver.csproj" Condition="$(TargetFramework.Contains('windows'))" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="WfbLink.cs">
+      <DependentUpon>UserStream.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

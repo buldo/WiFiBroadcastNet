@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using OpenHd.Ui.ImguiOsd;
+using OpenHd.Ui.TestRx;
 
 namespace OpenHd.Ui;
 
@@ -21,6 +23,8 @@ internal class Program
 
         builder.Services.AddSingleton<UiHostFactory>();
         builder.Services.AddHostedService<UiHostBase>(CreateUiHost);
+
+        builder.Services.AddHostedService<RemoteOpenHdConnector>();
 
         var host = builder.Build();
 

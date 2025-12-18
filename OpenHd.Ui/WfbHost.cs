@@ -1,7 +1,7 @@
-﻿using System.Net;
-using Bld.WlanUtils;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using WiFiBroadcastNet;
 using WiFiBroadcastNet.Devices;
 using WiFiBroadcastNet.Radio.Common;
@@ -11,11 +11,15 @@ namespace OpenHd.Ui;
 public class WfbHost : IHostedService
 {
     private readonly ILoggerFactory _loggerFactory;
+    private readonly InMemoryPipeStreamAccessor _h264Stream;
     private readonly WfbLink _iface;
 
-    public WfbHost(ILoggerFactory loggerFactory)
+    public WfbHost(
+        ILoggerFactory loggerFactory,
+        [FromKeyedServices("h264-stream")] InMemoryPipeStreamAccessor h264Stream)
     {
         _loggerFactory = loggerFactory;
+        _h264Stream = h264Stream;
         var devicesProvider = new AutoDevicesProvider(loggerFactory);
         _iface = new WfbLink(
             devicesProvider,
@@ -44,7 +48,7 @@ public class WfbHost : IHostedService
             {
                 StreamId = OpenHdRadioPorts.VIDEO_PRIMARY_RADIO_PORT,
                 IsFecEnabled = true,
-                StreamAccessor = new DummyStreamAccessor(_loggerFactory.CreateLogger<DummyStreamAccessor>()),
+                StreamAccessor = _h264Stream,
             },
             //new()
             //{

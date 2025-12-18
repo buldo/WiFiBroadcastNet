@@ -15,18 +15,12 @@ namespace OpenHd.Ui.ImguiOsd;
 /// <summary>
 /// When we run application as desktop application, we use SDL3 with OpenGL3
 /// </summary>
-internal class WindowedHost : UiHostBase
+internal sealed class WindowedHost : UiHostBase
 {
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ILogger<WindowedHost> _logger;
 
-    private GL? GL;
-    private unsafe SDLWindow* window;
-    private uint windowId;
-    private ImGuiContextPtr guiContext;
-    private ImGuiIOPtr io;
-    private SDLGLContext context;
-    private Task? drawThread;
+    private Task? _drawThread;
 
     public WindowedHost(
         [FromKeyedServices("h264-stream")] InMemoryPipeStreamAccessor h264Stream,
@@ -40,7 +34,7 @@ internal class WindowedHost : UiHostBase
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting WindowedHost draw thread");
-        drawThread = Task.Factory.StartNew(DrawThread, TaskCreationOptions.LongRunning);
+        _drawThread = Task.Factory.StartNew(DrawThread, TaskCreationOptions.LongRunning);
         return Task.CompletedTask;
     }
 
@@ -49,14 +43,17 @@ internal class WindowedHost : UiHostBase
         _logger.LogInformation("Stopping WindowedHost");
         await _cancellationTokenSource.CancelAsync();
 
-        if (drawThread != null)
+        if (_drawThread != null)
         {
-            await drawThread;
+            await _drawThread;
         }
     }
 
-    private void DrawThread()
+    private unsafe void DrawThread()
     {
+        GL? GL = null;
+        SDLGLContext context = SDLGLContext.Null;
+        SDLWindow* window = null;
         try
         {
             _logger.LogInformation("DrawThread started");
@@ -65,68 +62,64 @@ internal class WindowedHost : UiHostBase
             SDL.SetHint(SDL.SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
             SDL.Init(SDLInitFlags.Events | SDLInitFlags.Video);
 
-            unsafe
+            float mainScale = SDL.GetDisplayContentScale(SDL.GetPrimaryDisplay());
+            _logger.LogInformation("Display scale: {Scale}", mainScale);
+
+            window = SDL.CreateWindow("Test Window", (int)(1280 * mainScale), (int)(720 * mainScale),
+                SDLWindowFlags.Resizable | SDLWindowFlags.Opengl | SDLWindowFlags.HighPixelDensity);
+            var windowId = SDL.GetWindowID(window);
+            _logger.LogInformation("Window created. Window ID: {WindowId}", windowId);
+
+            _logger.LogInformation("Creating GL context");
+            context = SDL.GLCreateContext(window);
+
+            if (context.Handle == 0)
             {
-                float mainScale = SDL.GetDisplayContentScale(SDL.GetPrimaryDisplay());
-                _logger.LogInformation("Display scale: {Scale}", mainScale);
-
-                window = SDL.CreateWindow("Test Window", (int)(1280 * mainScale), (int)(720 * mainScale),
-                    SDLWindowFlags.Resizable | SDLWindowFlags.Opengl | SDLWindowFlags.HighPixelDensity);
-                windowId = SDL.GetWindowID(window);
-                _logger.LogInformation("Window created. Window ID: {WindowId}", windowId);
-
-                _logger.LogInformation("Creating GL context");
-                context = SDL.GLCreateContext(window);
-
-                if (context.Handle == 0)
-                {
-                    _logger.LogError("Failed to create GL context");
-                    return;
-                }
-
-                _logger.LogInformation("Creating ImGui context");
-                guiContext = ImGui.CreateContext();
-                ImGui.SetCurrentContext(guiContext);
-
-                // Setup ImGui config.
-                io = ImGui.GetIO();
-                io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
-                io.ConfigFlags |= ImGuiConfigFlags.NavEnableGamepad;
-                io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-                io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
-                io.ConfigViewportsNoAutoMerge = false;
-                io.ConfigViewportsNoTaskBarIcon = false;
-
-                var style = ImGui.GetStyle();
-                style.ScaleAllSizes(mainScale);
-                style.FontScaleDpi = mainScale;
-                io.ConfigDpiScaleFonts = true;
-                io.ConfigDpiScaleViewports = true;
-
-                _logger.LogInformation("Initializing ImGui SDL3 backend");
-                ImGuiImplSDL3.SetCurrentContext(guiContext);
-                if (!ImGuiImplSDL3.InitForOpenGL(new SDLWindowPtr((Hexa.NET.ImGui.Backends.SDL3.SDLWindow*)window), (void*)context.Handle))
-                {
-                    _logger.LogError("Failed to init ImGui Impl SDL3");
-                    return;
-                }
-
-                _logger.LogInformation("Initializing ImGui OpenGL3 backend");
-                ImGuiImplOpenGL3.SetCurrentContext(guiContext);
-                if (!ImGuiImplOpenGL3.Init((byte*)null))
-                {
-                    _logger.LogError("Failed to init ImGui Impl OpenGL3");
-                    return;
-                }
-
-                _logger.LogInformation("Creating GL bindings");
-                GL = new(new BindingsContext(window, context));
+                _logger.LogError("Failed to create GL context");
+                return;
             }
+
+            _logger.LogInformation("Creating ImGui context");
+            var guiContext = ImGui.CreateContext();
+            ImGui.SetCurrentContext(guiContext);
+
+            // Setup ImGui config.
+            var io = ImGui.GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+            io.ConfigFlags |= ImGuiConfigFlags.NavEnableGamepad;
+            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+            io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+            io.ConfigViewportsNoAutoMerge = false;
+            io.ConfigViewportsNoTaskBarIcon = false;
+
+            var style = ImGui.GetStyle();
+            style.ScaleAllSizes(mainScale);
+            style.FontScaleDpi = mainScale;
+            io.ConfigDpiScaleFonts = true;
+            io.ConfigDpiScaleViewports = true;
+
+            _logger.LogInformation("Initializing ImGui SDL3 backend");
+            ImGuiImplSDL3.SetCurrentContext(guiContext);
+            if (!ImGuiImplSDL3.InitForOpenGL(new SDLWindowPtr((Hexa.NET.ImGui.Backends.SDL3.SDLWindow*)window), (void*)context.Handle))
+            {
+                _logger.LogError("Failed to init ImGui Impl SDL3");
+                return;
+            }
+
+            _logger.LogInformation("Initializing ImGui OpenGL3 backend");
+            ImGuiImplOpenGL3.SetCurrentContext(guiContext);
+            if (!ImGuiImplOpenGL3.Init((byte*)null))
+            {
+                _logger.LogError("Failed to init ImGui Impl OpenGL3");
+                return;
+            }
+
+            _logger.LogInformation("Creating GL bindings");
+            GL = new GL(new BindingsContext(window, context));
 
             _logger.LogInformation("Entering render loop");
             SDLEvent sdlEvent = default;
             bool exiting = false;
-            int frameCount = 0;
 
             while (!exiting && !_cancellationTokenSource.Token.IsCancellationRequested)
             {
@@ -134,10 +127,7 @@ internal class WindowedHost : UiHostBase
 
                 while (SDL.PollEvent(ref sdlEvent))
                 {
-                    unsafe
-                    {
-                        ImGuiImplSDL3.ProcessEvent((Hexa.NET.ImGui.Backends.SDL3.SDLEvent*)&sdlEvent);
-                    }
+                    ImGuiImplSDL3.ProcessEvent((Hexa.NET.ImGui.Backends.SDL3.SDLEvent*)&sdlEvent);
 
                     switch ((SDLEventType)sdlEvent.Type)
                     {
@@ -162,7 +152,7 @@ internal class WindowedHost : UiHostBase
                     }
                 }
 
-                GL!.MakeCurrent();
+                GL.MakeCurrent();
                 GL.ClearColor(1, 0.8f, 0.75f, 1);
                 GL.Clear(GLClearBufferMask.ColorBufferBit);
 
@@ -186,15 +176,7 @@ internal class WindowedHost : UiHostBase
 
                 GL.MakeCurrent();
                 GL.SwapBuffers();
-
-                frameCount++;
-                if (frameCount % 60 == 0)
-                {
-                    _logger.LogDebug("Rendered {FrameCount} frames", frameCount);
-                }
             }
-
-            _logger.LogInformation("Exiting render loop. Rendered {TotalFrames} frames", frameCount);
         }
         catch (Exception ex)
         {
@@ -210,9 +192,13 @@ internal class WindowedHost : UiHostBase
             ImGui.DestroyContext();
             GL?.Dispose();
 
-            unsafe
+            if (context != SDLGLContext.Null)
             {
                 SDL.GLDestroyContext(context);
+            }
+
+            if (window != null)
+            {
                 SDL.DestroyWindow(window);
             }
 
@@ -220,56 +206,5 @@ internal class WindowedHost : UiHostBase
 
             _logger.LogInformation("DrawThread finished");
         }
-    }
-}
-
-internal unsafe class BindingsContext : HexaGen.Runtime.IGLContext
-{
-    private readonly SDLWindow* window;
-    private readonly SDLGLContext context;
-
-    public BindingsContext(SDLWindow* window, SDLGLContext context)
-    {
-        this.window = window;
-        this.context = context;
-    }
-
-    public nint Handle => (nint)window;
-
-    public bool IsCurrent => SDL.GLGetCurrentContext() == context;
-
-    public void Dispose()
-    {
-    }
-
-    public nint GetProcAddress(string procName)
-    {
-        return (nint)SDL.GLGetProcAddress(procName);
-    }
-
-    public bool IsExtensionSupported(string extensionName)
-    {
-        return SDL.GLExtensionSupported(extensionName);
-    }
-
-    public void MakeCurrent()
-    {
-        SDL.GLMakeCurrent(window, context);
-    }
-
-    public void SwapBuffers()
-    {
-        SDL.GLSwapWindow(window);
-    }
-
-    public void SwapInterval(int interval)
-    {
-        SDL.GLSetSwapInterval(interval);
-    }
-
-    public bool TryGetProcAddress(string procName, out nint procAddress)
-    {
-        procAddress = (nint)SDL.GLGetProcAddress(procName);
-        return procAddress != 0;
     }
 }

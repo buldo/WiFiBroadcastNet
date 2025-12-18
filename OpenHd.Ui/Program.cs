@@ -20,10 +20,9 @@ internal class Program
         builder.Services.AddKeyedSingleton<InMemoryPipeStreamAccessor>("h264-stream");
 
         builder.Services.AddSingleton<UiHostFactory>();
-        builder.Services.AddSingleton<UiHostBase>(CreateUiHost);
+        builder.Services.AddHostedService<UiHostBase>(CreateUiHost);
 
         var host = builder.Build();
-        var ui = host.Services.GetRequiredService<UiHostBase>();
 
         host.Run();
     }

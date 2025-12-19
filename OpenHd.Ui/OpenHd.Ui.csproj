@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -16,14 +16,13 @@
     <PackageReference Include="Hexa.NET.OpenGL3" Version="1.1.0" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
     <PackageReference Include="libsodium" Version="1.0.20.1" />
+    <!--<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />-->
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <!--<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.1" />-->
   </ItemGroup>
 
   <ItemGroup>
-	<ProjectReference Include="..\WiFiBroadcastNet\WiFiBroadcastNet.csproj" />
+    <ProjectReference Include="..\WiFiBroadcastNet\WiFiBroadcastNet.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="TestRx\" />
-  </ItemGroup>
 </Project>

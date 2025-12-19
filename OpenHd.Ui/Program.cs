@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
+﻿using OpenHd.Ui.Configuration;
 using OpenHd.Ui.ImguiOsd;
 using OpenHd.Ui.TestRx;
 
@@ -13,9 +10,10 @@ internal class Program
     {
         var builder = Host.CreateApplicationBuilder(args);
         builder.Logging
-            .SetMinimumLevel(LogLevel.Trace)
-            .AddFilter("Rtl8812auNet.*", LogLevel.Warning)
             .AddConsole();
+
+        builder.Services.Configure<RemoteOpenHdConfiguration>(
+            builder.Configuration.GetSection(RemoteOpenHdConfiguration.Key));
 
         //builder.Services.AddHostedService<WfbHost>();
 

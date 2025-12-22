@@ -11,9 +11,9 @@ internal class DrmHost : UiHostBase
 
     }
 
-    public override Task StartAsync(CancellationToken cancellationToken)
+    protected override void Start()
     {
-        return Task.CompletedTask;
+        return;
         throw new NotImplementedException();
     }
 

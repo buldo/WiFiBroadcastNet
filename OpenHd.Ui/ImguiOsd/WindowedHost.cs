@@ -28,11 +28,10 @@ internal sealed class WindowedHost : UiHostBase
         _logger.LogInformation("WindowedHost initialized");
     }
 
-    public override Task StartAsync(CancellationToken cancellationToken)
+    protected override void Start()
     {
         _logger.LogInformation("Starting WindowedHost draw thread");
         _drawThread = Task.Factory.StartNew(DrawThread, TaskCreationOptions.LongRunning);
-        return Task.CompletedTask;
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)

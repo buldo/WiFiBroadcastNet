@@ -9,6 +9,7 @@ internal abstract partial class UiHostBase : IHostedService
     private readonly H264Depacketiser _h264Depacketiser = new();
     private readonly BaseDecoder _h264Decoder;
     private readonly ILogger<UiHostBase> _logger;
+    private Task _decodingThread;
 
     protected UiHostBase(
         InMemoryPipeStreamAccessor h264Stream,
@@ -17,12 +18,21 @@ internal abstract partial class UiHostBase : IHostedService
     {
         _h264Stream = h264Stream;
         _h264Decoder = decodersFactory.CreateH264Decoder();
+        _h264Decoder.Start();
         _logger = logger;
         _h264Stream.SetReceiveAction(ReceiveH624);
     }
 
-    public abstract Task StartAsync(CancellationToken cancellationToken);
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        //_decodingThread = Task.Factory.StartNew(DecodingThread, TaskCreationOptions.LongRunning);
+        Start();
+        return Task.CompletedTask;
+    }
+
     public abstract Task StopAsync(CancellationToken cancellationToken);
+
+    protected abstract void Start();
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Received {Count} frames")]
     private partial void LogFramesCount(long count);
@@ -55,5 +65,10 @@ internal abstract partial class UiHostBase : IHostedService
         }
 
         _h264Decoder.AddBufferForDecode(buffer);
+    }
+
+    private unsafe void DecodingThread()
+    {
+
     }
 }

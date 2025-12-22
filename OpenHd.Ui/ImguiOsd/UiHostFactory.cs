@@ -23,6 +23,7 @@ internal class UiHostFactory
             return new WindowedHost(
                 _h264Stream,
                 _decodersFactory,
+                _loggerFactory,
                 _loggerFactory.CreateLogger<WindowedHost>());
         }
 

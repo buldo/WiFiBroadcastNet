@@ -7,9 +7,10 @@ internal abstract partial class UiHostBase : IHostedService
 {
     private readonly InMemoryPipeStreamAccessor _h264Stream;
     private readonly H264Depacketiser _h264Depacketiser = new();
-    private readonly BaseDecoder _h264Decoder;
     private readonly ILogger<UiHostBase> _logger;
     private Task _decodingThread;
+
+    protected readonly BaseDecoder H264Decoder;
 
     protected UiHostBase(
         InMemoryPipeStreamAccessor h264Stream,
@@ -17,8 +18,8 @@ internal abstract partial class UiHostBase : IHostedService
         ILogger<UiHostBase> logger)
     {
         _h264Stream = h264Stream;
-        _h264Decoder = decodersFactory.CreateH264Decoder();
-        _h264Decoder.Start();
+        H264Decoder = decodersFactory.CreateH264Decoder();
+        H264Decoder.Start();
         _logger = logger;
         _h264Stream.SetReceiveAction(ReceiveH624);
     }
@@ -52,7 +53,7 @@ internal abstract partial class UiHostBase : IHostedService
 
     private void ProcessNalu(ReadOnlySpan<byte> nalu)
     {
-        var buffer = _h264Decoder.GetEncodedBuffersForReuse();
+        var buffer = H264Decoder.GetEncodedBuffersForReuse();
         if (buffer == null)
         {
             _logger.LogWarning("Skipping frame");
@@ -64,7 +65,7 @@ internal abstract partial class UiHostBase : IHostedService
             memBuf.CopyFromSpan(nalu);
         }
 
-        _h264Decoder.AddBufferForDecode(buffer);
+        H264Decoder.AddBufferForDecode(buffer);
     }
 
     private unsafe void DecodingThread()

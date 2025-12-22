@@ -8,8 +8,6 @@ internal abstract partial class UiHostBase : IHostedService
     private readonly H264Depacketiser _h264Depacketiser = new();
     private readonly ILogger<UiHostBase> _logger;
 
-    private long _counter;
-
     protected UiHostBase(
         InMemoryPipeStreamAccessor h264Stream,
         ILogger<UiHostBase> logger)
@@ -22,6 +20,8 @@ internal abstract partial class UiHostBase : IHostedService
     public abstract Task StartAsync(CancellationToken cancellationToken);
     public abstract Task StopAsync(CancellationToken cancellationToken);
 
+    protected abstract void ProcessNalu(ReadOnlySpan<byte> nalu);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Received {Count} frames")]
     private partial void LogFramesCount(long count);
 
@@ -33,11 +33,8 @@ internal abstract partial class UiHostBase : IHostedService
         var frame = _h264Depacketiser.ProcessRTPPayload(packet.Payload, hdr.SequenceNumber, hdr.Timestamp, hdr.MarkerBit, out var isKeyFrame);
         if (frame != null)
         {
-            _counter++;
-            if (_counter % 1000 == 0)
-            {
-                LogFramesCount(_counter);
-            }
+            var nalu = frame.ToArray();
+            ProcessNalu(nalu);
         }
     }
 }

@@ -49,6 +49,11 @@ internal sealed class WindowedHost : UiHostBase
         }
     }
 
+    protected override void ProcessNalu(ReadOnlySpan<byte> nalu)
+    {
+        throw new NotImplementedException();
+    }
+
     private unsafe void DrawThread()
     {
         GL? GL = null;

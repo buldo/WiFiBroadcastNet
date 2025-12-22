@@ -24,4 +24,9 @@ internal class DrmHost : UiHostBase
         return Task.CompletedTask;
         throw new NotImplementedException();
     }
+
+    protected override void ProcessNalu(ReadOnlySpan<byte> nalu)
+    {
+        throw new NotImplementedException();
+    }
 }

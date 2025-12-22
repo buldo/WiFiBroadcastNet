@@ -17,10 +17,13 @@
   </Folder>
   <Folder Name="/SharpVideo/">
     <Project Path="SharpVideo/src/Examples/SharpVideo.FfmpegDemo/SharpVideo.FfmpegDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.ImGuiDemo/SharpVideo.ImGuiDemo.csproj" />
     <Project Path="SharpVideo/src/SharpVideo.Decoding/SharpVideo.Decoding.csproj" />
     <Project Path="SharpVideo/src/SharpVideo.FfmpegBin/SharpVideo.FfmpegBin.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.ImGui/SharpVideo.ImGui.csproj" />
     <Project Path="SharpVideo/src/SharpVideo.Linux.Native/SharpVideo.Linux.Native.csproj" />
     <Project Path="SharpVideo/src/SharpVideo.Rtp/SharpVideo.Rtp.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Utils/SharpVideo.Utils.csproj" />
     <Project Path="SharpVideo/src/SharpVideo/SharpVideo.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">

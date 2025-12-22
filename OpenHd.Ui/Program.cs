@@ -18,6 +18,7 @@ internal class Program
         //builder.Services.AddHostedService<WfbHost>();
 
         builder.Services.AddKeyedSingleton<InMemoryPipeStreamAccessor>("h264-stream");
+        builder.Services.AddSingleton<DecodersFactory>();
 
         builder.Services.AddSingleton<UiHostFactory>();
         builder.Services.AddHostedService<UiHostBase>(CreateUiHost);

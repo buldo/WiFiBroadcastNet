@@ -1,12 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-using Hexa.NET.ImGui;
+﻿using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.OpenGL3;
 using Hexa.NET.ImGui.Backends.SDL3;
 using Hexa.NET.OpenGL;
 using Hexa.NET.SDL3;
-
 using SDLEvent = Hexa.NET.SDL3.SDLEvent;
 using SDLWindow = Hexa.NET.SDL3.SDLWindow;
 
@@ -24,8 +20,9 @@ internal sealed class WindowedHost : UiHostBase
 
     public WindowedHost(
         [FromKeyedServices("h264-stream")] InMemoryPipeStreamAccessor h264Stream,
+        DecodersFactory decodersFactory,
         ILogger<WindowedHost> logger)
-        : base(h264Stream, logger)
+        : base(h264Stream, decodersFactory, logger)
     {
         _logger = logger;
         _logger.LogInformation("WindowedHost initialized");
@@ -47,11 +44,6 @@ internal sealed class WindowedHost : UiHostBase
         {
             await _drawThread;
         }
-    }
-
-    protected override void ProcessNalu(ReadOnlySpan<byte> nalu)
-    {
-        throw new NotImplementedException();
     }
 
     private unsafe void DrawThread()

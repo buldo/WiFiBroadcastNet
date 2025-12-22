@@ -1,18 +1,18 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-namespace OpenHd.Ui.ImguiOsd;
+﻿namespace OpenHd.Ui.ImguiOsd;
 
 internal class UiHostFactory
 {
     private readonly InMemoryPipeStreamAccessor _h264Stream;
+    private readonly DecodersFactory _decodersFactory;
     private readonly ILoggerFactory _loggerFactory;
 
     public UiHostFactory(
         [FromKeyedServices("h264-stream")] InMemoryPipeStreamAccessor h264Stream,
+        DecodersFactory decodersFactory,
         ILoggerFactory loggerFactory)
     {
         _h264Stream = h264Stream;
+        _decodersFactory = decodersFactory;
         _loggerFactory = loggerFactory;
     }
 
@@ -20,11 +20,15 @@ internal class UiHostFactory
     {
         if (OperatingSystem.IsWindows())
         {
-            var logger = _loggerFactory.CreateLogger<WindowedHost>();
-            return new WindowedHost(_h264Stream, logger);
+            return new WindowedHost(
+                _h264Stream,
+                _decodersFactory,
+                _loggerFactory.CreateLogger<WindowedHost>());
         }
 
-        var drmLogger = _loggerFactory.CreateLogger<DrmHost>();
-        return new DrmHost(_h264Stream, drmLogger);
+        return new DrmHost(
+            _h264Stream,
+            _decodersFactory,
+            _loggerFactory.CreateLogger<DrmHost>());
     }
 }

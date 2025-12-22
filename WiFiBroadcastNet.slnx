@@ -16,6 +16,7 @@
     <Project Path="SpaceWizards.Sodium.Interop/SpaceWizards.Sodium.Interop.csproj" />
   </Folder>
   <Folder Name="/SharpVideo/">
+    <Project Path="SharpVideo/src/SharpVideo.Decoding/SharpVideo.Decoding.csproj" />
     <Project Path="SharpVideo/src/SharpVideo.FfmpegBin/SharpVideo.FfmpegBin.csproj" />
     <Project Path="SharpVideo/src/SharpVideo.Linux.Native/SharpVideo.Linux.Native.csproj" />
     <Project Path="SharpVideo/src/SharpVideo.Rtp/SharpVideo.Rtp.csproj" />

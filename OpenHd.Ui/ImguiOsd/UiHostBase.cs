@@ -1,4 +1,5 @@
-﻿using SharpVideo.Rtp;
+﻿using SharpVideo.Decoding;
+using SharpVideo.Rtp;
 
 namespace OpenHd.Ui.ImguiOsd;
 
@@ -6,21 +7,22 @@ internal abstract partial class UiHostBase : IHostedService
 {
     private readonly InMemoryPipeStreamAccessor _h264Stream;
     private readonly H264Depacketiser _h264Depacketiser = new();
+    private readonly BaseDecoder _h264Decoder;
     private readonly ILogger<UiHostBase> _logger;
 
     protected UiHostBase(
         InMemoryPipeStreamAccessor h264Stream,
+        DecodersFactory decodersFactory,
         ILogger<UiHostBase> logger)
     {
         _h264Stream = h264Stream;
+        _h264Decoder = decodersFactory.CreateH264Decoder();
         _logger = logger;
         _h264Stream.SetReceiveAction(ReceiveH624);
     }
 
     public abstract Task StartAsync(CancellationToken cancellationToken);
     public abstract Task StopAsync(CancellationToken cancellationToken);
-
-    protected abstract void ProcessNalu(ReadOnlySpan<byte> nalu);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Received {Count} frames")]
     private partial void LogFramesCount(long count);
@@ -36,5 +38,22 @@ internal abstract partial class UiHostBase : IHostedService
             var nalu = frame.ToArray();
             ProcessNalu(nalu);
         }
+    }
+
+    private void ProcessNalu(ReadOnlySpan<byte> nalu)
+    {
+        var buffer = _h264Decoder.GetEncodedBuffersForReuse();
+        if (buffer == null)
+        {
+            _logger.LogWarning("Skipping frame");
+            return;
+        }
+
+        if (buffer is ManagedMemoryEncodedBuffer memBuf)
+        {
+            memBuf.CopyFromSpan(nalu);
+        }
+
+        _h264Decoder.AddBufferForDecode(buffer);
     }
 }

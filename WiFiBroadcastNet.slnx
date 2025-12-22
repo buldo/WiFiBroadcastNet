@@ -15,6 +15,12 @@
     <Project Path="OpenHd.Fec/OpenHd.Fec.csproj" />
     <Project Path="SpaceWizards.Sodium.Interop/SpaceWizards.Sodium.Interop.csproj" />
   </Folder>
+  <Folder Name="/SharpVideo/">
+    <Project Path="SharpVideo/src/SharpVideo.FfmpegBin/SharpVideo.FfmpegBin.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Linux.Native/SharpVideo.Linux.Native.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Rtp/SharpVideo.Rtp.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo/SharpVideo.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />

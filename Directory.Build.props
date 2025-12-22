@@ -3,7 +3,5 @@
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AnalysisMode>Recommended</AnalysisMode>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
   </PropertyGroup>
 </Project>

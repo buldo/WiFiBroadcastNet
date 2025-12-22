@@ -169,9 +169,6 @@ internal sealed class WindowedHost : UiHostBase
             io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
             io.ConfigFlags |= ImGuiConfigFlags.NavEnableGamepad;
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-            io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
-            io.ConfigViewportsNoAutoMerge = false;
-            io.ConfigViewportsNoTaskBarIcon = false;
 
             var style = ImGui.GetStyle();
             style.ScaleAllSizes(mainScale);
@@ -302,12 +299,6 @@ internal sealed class WindowedHost : UiHostBase
 
                 GL.MakeCurrent();
                 ImGuiImplOpenGL3.RenderDrawData(ImGui.GetDrawData());
-
-                if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
-                {
-                    ImGui.UpdatePlatformWindows();
-                    ImGui.RenderPlatformWindowsDefault();
-                }
 
                 GL.MakeCurrent();
                 GL.SwapBuffers();

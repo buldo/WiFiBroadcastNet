@@ -6,7 +6,7 @@ namespace OpenHd.Ui.ImguiOsd;
 /// <summary>
 /// OpenGL renderer for YUV420P video frames from FFmpeg using Hexa.NET.OpenGL
 /// </summary>
-internal sealed unsafe class FfmpegGlRenderer : IDisposable
+internal sealed unsafe class FfmpegGlRenderer : IVideoRenderer, IDisposable
 {
     private readonly ILogger<FfmpegGlRenderer> _logger;
     private readonly GL _gl;
@@ -218,6 +218,8 @@ void main()
         _gl.BindVertexArray(_vao);
         _gl.DrawArrays(GLPrimitiveType.TriangleFan, 0, 4);
     }
+
+    public bool HasFrame => _videoWidth > 0 && _videoHeight > 0;
 
     public void Dispose()
     {

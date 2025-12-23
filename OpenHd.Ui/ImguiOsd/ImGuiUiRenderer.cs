@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Hexa.NET.ImGui;
 using Microsoft.Extensions.Logging;
 
@@ -13,7 +13,7 @@ internal sealed class ImGuiUiRenderer
     private readonly ILogger<ImGuiUiRenderer> _logger;
     private readonly Action<float>? _customRenderCallback;
     private readonly bool _showDemoWindow;
-    
+
     private int _lastFrameWidth;
     private int _lastFrameHeight;
     private int _lastFrameFormat;

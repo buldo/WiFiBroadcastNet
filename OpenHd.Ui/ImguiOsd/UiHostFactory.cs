@@ -20,16 +20,30 @@ internal class UiHostFactory
     {
         if (OperatingSystem.IsWindows())
         {
-            return new WindowedHost(
-                _h264Stream,
-                _decodersFactory,
-                _loggerFactory,
-                _loggerFactory.CreateLogger<WindowedHost>());
+            return CreateWindowed();
         }
 
+        if (OperatingSystem.IsLinux())
+        {
+            var dmExists = Environment.GetEnvironmentVariable("DISPLAY") != null || Environment.GetEnvironmentVariable("WAYLAND_DISPLAY") != null;
+            if (dmExists)
+            {
+                return CreateWindowed();
+            }
+        }
+        
         return new DrmHost(
             _h264Stream,
             _decodersFactory,
             _loggerFactory.CreateLogger<DrmHost>());
+    }
+
+    private UiHostBase CreateWindowed()
+    {
+        return new WindowedHost(
+            _h264Stream,
+            _decodersFactory,
+            _loggerFactory,
+            _loggerFactory.CreateLogger<WindowedHost>());
     }
 }

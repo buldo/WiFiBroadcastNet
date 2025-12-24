@@ -35,9 +35,6 @@ internal abstract partial class UiHostBase : IHostedService
 
     protected abstract void Start();
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Received {Count} frames")]
-    private partial void LogFramesCount(long count);
-
     private void ReceiveH624(ReadOnlyMemory<byte> payload)
     {
         // TODO: Less array copies

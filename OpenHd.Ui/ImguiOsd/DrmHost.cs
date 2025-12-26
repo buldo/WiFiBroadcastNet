@@ -1,4 +1,5 @@
-﻿using System.Runtime.Versioning;
+using System.Runtime.Versioning;
+using FFmpeg.AutoGen;
 using Hexa.NET.ImGui;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -136,9 +137,23 @@ internal sealed class DrmHost : UiHostBase
         }
     }
 
+    /// <summary>
+    /// Initializes all DRM resources including overlay plane.
+    /// Uses decoder's OutputPixelFormat to select optimal video plane format.
+    /// </summary>
     private void InitializeDrmResources()
     {
-        _logger.LogInformation("Initializing DRM resources (dual-plane mode)");
+        // Get decoder's output format upfront
+        var decoderPixelFormat = H264Decoder.OutputPixelFormat;
+        var preferredDrmFormat = PixelFormatConverter.GetPreferredDrmFormat(decoderPixelFormat);
+        var requiresConversion = PixelFormatConverter.RequiresConversion(decoderPixelFormat, preferredDrmFormat);
+        var formatName = PixelFormatConverter.GetFormatName(decoderPixelFormat);
+
+        _logger.LogInformation(
+            "Initializing DRM resources. Decoder format: {DecoderFormat}, DRM format: {DrmFormat}, Requires conversion: {RequiresConversion}",
+            formatName,
+            preferredDrmFormat.GetName(),
+            requiresConversion);
 
         // Open DRM device
         _drmDevice = string.IsNullOrEmpty(_configuration.DrmDevicePath)
@@ -162,10 +177,11 @@ internal sealed class DrmHost : UiHostBase
             throw new InvalidOperationException("Failed to create DMA buffers allocator");
         }
 
+        // Initialize DrmBufferManager with formats needed for this decoder
         _drmBufferManager = new DrmBufferManager(
             _drmDevice,
             _dmaAllocator,
-            [KnownPixelFormats.DRM_FORMAT_NV12, KnownPixelFormats.DRM_FORMAT_ARGB8888],
+            [preferredDrmFormat, KnownPixelFormats.DRM_FORMAT_ARGB8888],
             _loggerFactory.CreateLogger<DrmBufferManager>());
 
         // Create unified DRM presenter with GBM atomic primary (ImGui) and DMA overlay (video)
@@ -176,7 +192,7 @@ internal sealed class DrmHost : UiHostBase
             _gbmDevice,
             _drmBufferManager,
             KnownPixelFormats.DRM_FORMAT_ARGB8888,  // Primary plane for ImGui OSD
-            KnownPixelFormats.DRM_FORMAT_NV12,      // Overlay plane for video
+            preferredDrmFormat,                      // Overlay plane for video (matches decoder)
             _logger);
 
         if (_presenter == null)
@@ -240,10 +256,12 @@ internal sealed class DrmHost : UiHostBase
 
         _logger.LogInformation("ImGui manager initialized");
 
-        // Create video plane renderer for overlay (buffers allocated dynamically based on video resolution)
+        // Create video plane renderer for overlay
         _videoPlaneRenderer = new VideoPlaneRenderer(
             _presenter.OverlayPlanePresenter,
             _drmBufferManager,
+            decoderPixelFormat,
+            preferredDrmFormat,
             _loggerFactory.CreateLogger<VideoPlaneRenderer>());
 
         _logger.LogInformation("DRM resources initialized successfully (dual-plane mode)");
@@ -382,9 +400,9 @@ internal sealed class DrmHost : UiHostBase
                 frameData->height,
                 frameData->format,
                 frameData->pts,
-                (frameData->flags & FFmpeg.AutoGen.ffmpeg.AV_FRAME_FLAG_KEY) != 0);
+                (frameData->flags & ffmpeg.AV_FRAME_FLAG_KEY) != 0);
 
-            // Render video to overlay plane (YUV420P -> NV12 -> DRM)
+            // Render video to overlay plane
             _videoPlaneRenderer?.RenderFrame(frame);
 
             _videoFrameManager?.ReleaseFrame(frame);

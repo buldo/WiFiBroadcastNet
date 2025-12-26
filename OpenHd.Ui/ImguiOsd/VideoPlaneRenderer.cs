@@ -4,15 +4,13 @@ using Microsoft.Extensions.Logging;
 using SharpVideo.Decoding;
 using SharpVideo.DmaBuffers;
 using SharpVideo.Drm;
-using SharpVideo.Linux.Native;
 using SharpVideo.Utils;
 
 namespace OpenHd.Ui.ImguiOsd;
 
 /// <summary>
 /// Manages video frame output to DRM overlay plane using DMA buffers.
-/// Supports multiple pixel formats with zero-copy rendering when formats match,
-/// or automatic conversion when needed.
+/// Copies decoded FFmpeg frames to DMA buffers for display.
 /// </summary>
 [SupportedOSPlatform("linux")]
 internal sealed class VideoPlaneRenderer : IDisposable
@@ -21,9 +19,7 @@ internal sealed class VideoPlaneRenderer : IDisposable
     private readonly DrmBufferManager _bufferManager;
     private readonly ILogger<VideoPlaneRenderer> _logger;
     private readonly int _bufferCount;
-    private readonly PixelFormat _sourceFormat;
-    private readonly PixelFormat _targetDrmFormat;
-    private readonly bool _requiresConversion;
+    private readonly PixelFormat _pixelFormat;
 
     private readonly List<SharedDmaBuffer> _buffers = [];
     private int _currentBufferIndex;
@@ -32,50 +28,37 @@ internal sealed class VideoPlaneRenderer : IDisposable
     private bool _disposed;
 
     /// <summary>
-    /// Creates a new VideoPlaneRenderer with specified source and target formats.
+    /// Creates a new VideoPlaneRenderer with specified pixel format.
     /// </summary>
     /// <param name="overlayPresenter">DRM overlay plane presenter</param>
     /// <param name="bufferManager">Buffer manager for DMA buffer allocation</param>
-    /// <param name="sourceFormat">Decoder pixel format</param>
-    /// <param name="targetDrmFormat">DRM pixel format for display</param>
+    /// <param name="pixelFormat">Pixel format for both decoder output and DRM plane</param>
     /// <param name="logger">Logger instance</param>
     /// <param name="bufferCount">Number of buffers to allocate</param>
     public VideoPlaneRenderer(
         DrmPlaneLastDmaBufferPresenter overlayPresenter,
         DrmBufferManager bufferManager,
-        PixelFormat sourceFormat,
-        PixelFormat targetDrmFormat,
+        PixelFormat pixelFormat,
         ILogger<VideoPlaneRenderer> logger,
         int bufferCount = 3)
     {
-        _overlayPresenter = overlayPresenter ?? throw new ArgumentNullException(nameof(overlayPresenter));
-        _bufferManager = bufferManager ?? throw new ArgumentNullException(nameof(bufferManager));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(overlayPresenter);
+        ArgumentNullException.ThrowIfNull(bufferManager);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _overlayPresenter = overlayPresenter;
+        _bufferManager = bufferManager;
+        _logger = logger;
         _bufferCount = bufferCount;
-        _sourceFormat = sourceFormat;
-        _targetDrmFormat = targetDrmFormat;
-        _requiresConversion = sourceFormat != targetDrmFormat;
+        _pixelFormat = pixelFormat;
 
-        var sourceFormatName = sourceFormat.GetName();
-        var targetFormatName = targetDrmFormat.GetName();
-
-        if (_requiresConversion)
-        {
-            _logger.LogInformation(
-                "VideoPlaneRenderer created: {SourceFormat} -> {TargetFormat} (conversion required)",
-                sourceFormatName, targetFormatName);
-        }
-        else
-        {
-            _logger.LogInformation(
-                "VideoPlaneRenderer created: {SourceFormat} -> {TargetFormat} (zero-copy)",
-                sourceFormatName, targetFormatName);
-        }
+        _logger.LogInformation(
+            "VideoPlaneRenderer created with format: {Format}",
+            pixelFormat.GetName());
     }
 
     /// <summary>
     /// Renders a decoded FFmpeg frame to the overlay plane.
-    /// Uses zero-copy when formats match, or converts when necessary.
     /// Handles resolution changes automatically.
     /// </summary>
     public unsafe void RenderFrame(FfmpegDecodedFrame frame)
@@ -108,15 +91,8 @@ internal sealed class VideoPlaneRenderer : IDisposable
         var buffer = _buffers[_currentBufferIndex];
         _currentBufferIndex = (_currentBufferIndex + 1) % _buffers.Count;
 
-        // Copy frame data to DMA buffer (with or without conversion)
-        if (_requiresConversion)
-        {
-            CopyFrameWithConversion(avFrame, buffer);
-        }
-        else
-        {
-            CopyFrameDirect(avFrame, buffer);
-        }
+        // Copy frame data to DMA buffer
+        CopyFrame(avFrame, buffer);
 
         // Sync the buffer to ensure GPU/display can see the data
         buffer.DmaBuffer.SyncMap();
@@ -137,13 +113,13 @@ internal sealed class VideoPlaneRenderer : IDisposable
         // Free existing buffers
         FreeBuffers();
 
-        // Allocate new buffers with video resolution using target format
+        // Allocate new buffers with video resolution
         _logger.LogInformation("Allocating {Count} {Format} buffers for video ({Width}x{Height})",
-            _bufferCount, _targetDrmFormat.GetName(), width, height);
+            _bufferCount, _pixelFormat.GetName(), width, height);
 
         for (int i = 0; i < _bufferCount; i++)
         {
-            var buffer = _bufferManager.AllocateBuffer(width, height, _targetDrmFormat);
+            var buffer = _bufferManager.AllocateBuffer(width, height, _pixelFormat);
             buffer.MapBuffer();
 
             if (buffer.MapStatus == MapStatus.FailedToMap)
@@ -181,33 +157,32 @@ internal sealed class VideoPlaneRenderer : IDisposable
     }
 
     /// <summary>
-    /// Copies frame data directly when formats match (zero-copy path).
+    /// Copies frame data based on the pixel format.
     /// </summary>
-    private unsafe void CopyFrameDirect(AVFrame* avFrame, SharedDmaBuffer buffer)
+    private unsafe void CopyFrame(AVFrame* avFrame, SharedDmaBuffer buffer)
     {
         var dstSpan = buffer.DmaBuffer.GetMappedSpan();
         var dstStride = buffer.Stride;
 
-        // Handle based on source format
-        if (_sourceFormat.Fourcc == KnownPixelFormats.DRM_FORMAT_NV12.Fourcc)
+        if (_pixelFormat.Fourcc == KnownPixelFormats.DRM_FORMAT_NV12.Fourcc)
         {
-            CopyNv12Direct(avFrame, dstSpan, dstStride, buffer.Height);
+            CopyNv12(avFrame, dstSpan, dstStride, buffer.Height);
         }
-        else if (_sourceFormat.Fourcc == KnownPixelFormats.DRM_FORMAT_YUV420.Fourcc)
+        else if (_pixelFormat.Fourcc == KnownPixelFormats.DRM_FORMAT_YUV420.Fourcc)
         {
-            CopyYuv420pDirect(avFrame, dstSpan, dstStride, buffer.Height);
+            CopyYuv420p(avFrame, dstSpan, dstStride, buffer.Height);
         }
         else
         {
             // For other formats, fall back to generic planar copy
-            CopyPlanarDirect(avFrame, dstSpan, dstStride, buffer.Height);
+            CopyPlanar(avFrame, dstSpan, dstStride, buffer.Height);
         }
     }
 
     /// <summary>
-    /// Direct copy for NV12 format (semi-planar, Y + interleaved UV).
+    /// Copy for NV12 format (semi-planar, Y + interleaved UV).
     /// </summary>
-    private unsafe void CopyNv12Direct(AVFrame* avFrame, Span<byte> dstSpan, uint dstStride, uint dstHeight)
+    private unsafe void CopyNv12(AVFrame* avFrame, Span<byte> dstSpan, uint dstStride, uint dstHeight)
     {
         var frameWidth = avFrame->width;
         var frameHeight = avFrame->height;
@@ -245,10 +220,10 @@ internal sealed class VideoPlaneRenderer : IDisposable
     }
 
     /// <summary>
-    /// Direct copy for YUV420P format (planar Y, U, V).
+    /// Copy for YUV420P format (planar Y, U, V).
     /// Maps to DRM_FORMAT_YUV420 (I420).
     /// </summary>
-    private unsafe void CopyYuv420pDirect(AVFrame* avFrame, Span<byte> dstSpan, uint dstStride, uint dstHeight)
+    private unsafe void CopyYuv420p(AVFrame* avFrame, Span<byte> dstSpan, uint dstStride, uint dstHeight)
     {
         var frameWidth = avFrame->width;
         var frameHeight = avFrame->height;
@@ -261,7 +236,6 @@ internal sealed class VideoPlaneRenderer : IDisposable
         var srcStrideV = avFrame->linesize[2];
 
         // DRM_FORMAT_YUV420 (I420): Y plane, then U plane, then V plane
-        // Strides may differ between src and dst
         var yPlaneSize = dstStride * dstHeight;
         var uvWidth = frameWidth / 2;
         var uvHeight = frameHeight / 2;
@@ -307,7 +281,7 @@ internal sealed class VideoPlaneRenderer : IDisposable
     /// <summary>
     /// Generic planar copy for other formats.
     /// </summary>
-    private unsafe void CopyPlanarDirect(AVFrame* avFrame, Span<byte> dstSpan, uint dstStride, uint dstHeight)
+    private unsafe void CopyPlanar(AVFrame* avFrame, Span<byte> dstSpan, uint dstStride, uint dstHeight)
     {
         var frameWidth = avFrame->width;
         var frameHeight = avFrame->height;
@@ -348,81 +322,6 @@ internal sealed class VideoPlaneRenderer : IDisposable
                 }
 
                 offset += planeStride * (dstHeight / 2);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Copies frame with format conversion (e.g., YUV420P -> NV12).
-    /// </summary>
-    private unsafe void CopyFrameWithConversion(AVFrame* avFrame, SharedDmaBuffer buffer)
-    {
-        // Currently only YUV420P -> NV12 conversion is implemented
-        if (_sourceFormat.Fourcc == KnownPixelFormats.DRM_FORMAT_YUV420.Fourcc &&
-            _targetDrmFormat.Fourcc == KnownPixelFormats.DRM_FORMAT_NV12.Fourcc)
-        {
-            ConvertYuv420pToNv12(avFrame, buffer);
-        }
-        else
-        {
-            _logger.LogWarning(
-                "Unsupported conversion: {Source} -> {Target}",
-                _sourceFormat.GetName(),
-                _targetDrmFormat.GetName());
-        }
-    }
-
-    /// <summary>
-    /// Converts YUV420P (planar) to NV12 (semi-planar) format.
-    /// YUV420P: Y plane, U plane, V plane (all separate)
-    /// NV12: Y plane, UV interleaved plane
-    /// </summary>
-    private unsafe void ConvertYuv420pToNv12(AVFrame* avFrame, SharedDmaBuffer buffer)
-    {
-        var frameWidth = avFrame->width;
-        var frameHeight = avFrame->height;
-
-        var dstSpan = buffer.DmaBuffer.GetMappedSpan();
-        var dstStride = buffer.Stride;
-
-        // Calculate NV12 plane offsets
-        var yPlaneSize = dstStride * buffer.Height;
-        var uvPlaneOffset = yPlaneSize;
-
-        // Source pointers and strides
-        var srcY = avFrame->data[0];
-        var srcU = avFrame->data[1];
-        var srcV = avFrame->data[2];
-        var srcStrideY = avFrame->linesize[0];
-        var srcStrideU = avFrame->linesize[1];
-        var srcStrideV = avFrame->linesize[2];
-
-        fixed (byte* dstPtr = dstSpan)
-        {
-            // Copy Y plane
-            for (int y = 0; y < frameHeight; y++)
-            {
-                var srcRow = srcY + y * srcStrideY;
-                var dstRow = dstPtr + y * dstStride;
-
-                Buffer.MemoryCopy(srcRow, dstRow, dstStride, frameWidth);
-            }
-
-            // Interleave U and V planes to create UV plane
-            var uvHeight = frameHeight / 2;
-            var uvWidth = frameWidth / 2;
-
-            for (int y = 0; y < uvHeight; y++)
-            {
-                var srcRowU = srcU + y * srcStrideU;
-                var srcRowV = srcV + y * srcStrideV;
-                var dstRow = dstPtr + uvPlaneOffset + y * dstStride;
-
-                for (int x = 0; x < uvWidth; x++)
-                {
-                    dstRow[x * 2] = srcRowU[x];      // U
-                    dstRow[x * 2 + 1] = srcRowV[x];  // V
-                }
             }
         }
     }

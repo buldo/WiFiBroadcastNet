@@ -139,21 +139,16 @@ internal sealed class DrmHost : UiHostBase
 
     /// <summary>
     /// Initializes all DRM resources including overlay plane.
-    /// Uses decoder's OutputPixelFormat to select optimal video plane format.
+    /// Uses decoder's OutputPixelFormat directly for the video plane.
     /// </summary>
     private void InitializeDrmResources()
     {
-        // Get decoder's output format upfront
-        var decoderPixelFormat = H264Decoder.OutputPixelFormat;
-        var preferredDrmFormat = decoderPixelFormat;
-        var requiresConversion = decoderPixelFormat != preferredDrmFormat;
-        var formatName = decoderPixelFormat.GetName();
+        // Get decoder's output format - DRM plane must support this format
+        var videoPixelFormat = H264Decoder.OutputPixelFormat;
 
         _logger.LogInformation(
-            "Initializing DRM resources. Decoder format: {DecoderFormat}, DRM format: {DrmFormat}, Requires conversion: {RequiresConversion}",
-            formatName,
-            preferredDrmFormat.GetName(),
-            requiresConversion);
+            "Initializing DRM resources. Video pixel format: {Format}",
+            videoPixelFormat.GetName());
 
         // Open DRM device
         _drmDevice = string.IsNullOrEmpty(_configuration.DrmDevicePath)
@@ -181,7 +176,7 @@ internal sealed class DrmHost : UiHostBase
         _drmBufferManager = new DrmBufferManager(
             _drmDevice,
             _dmaAllocator,
-            [preferredDrmFormat, KnownPixelFormats.DRM_FORMAT_ARGB8888],
+            [videoPixelFormat, KnownPixelFormats.DRM_FORMAT_ARGB8888],
             _loggerFactory.CreateLogger<DrmBufferManager>());
 
         // Create unified DRM presenter with GBM atomic primary (ImGui) and DMA overlay (video)
@@ -192,7 +187,7 @@ internal sealed class DrmHost : UiHostBase
             _gbmDevice,
             _drmBufferManager,
             KnownPixelFormats.DRM_FORMAT_ARGB8888,  // Primary plane for ImGui OSD
-            preferredDrmFormat,                      // Overlay plane for video (matches decoder)
+            videoPixelFormat,                      // Overlay plane for video (matches decoder)
             _logger);
 
         if (_presenter == null)
@@ -260,8 +255,7 @@ internal sealed class DrmHost : UiHostBase
         _videoPlaneRenderer = new VideoPlaneRenderer(
             _presenter.OverlayPlanePresenter,
             _drmBufferManager,
-            decoderPixelFormat,
-            preferredDrmFormat,
+            videoPixelFormat,
             _loggerFactory.CreateLogger<VideoPlaneRenderer>());
 
         _logger.LogInformation("DRM resources initialized successfully (dual-plane mode)");

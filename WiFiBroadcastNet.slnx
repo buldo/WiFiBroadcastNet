@@ -16,19 +16,30 @@
     <Project Path="SpaceWizards.Sodium.Interop/SpaceWizards.Sodium.Interop.csproj" />
   </Folder>
   <Folder Name="/SharpVideo/">
+    <Project Path="SharpVideo/src/SharpVideo.Decoding/SharpVideo.Decoding.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.FfmpegBin/SharpVideo.FfmpegBin.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.ImGui/SharpVideo.ImGui.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Linux.Native.Tests/SharpVideo.Linux.Native.Tests.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Linux.Native/SharpVideo.Linux.Native.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Rtp/SharpVideo.Rtp.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Tests/SharpVideo.Tests.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Utils/SharpVideo.Utils.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo/SharpVideo.csproj" />
+  </Folder>
+  <Folder Name="/SharpVideo/Examples/">
+    <Project Path="SharpVideo/src/Examples/SharpVideo.DemoMedia/SharpVideo.DemoMedia.csproj" />
     <Project Path="SharpVideo/src/Examples/SharpVideo.DrmDemo/SharpVideo.DrmDemo.csproj" />
     <Project Path="SharpVideo/src/Examples/SharpVideo.DrmDmaDemo/SharpVideo.DrmDmaDemo.csproj" />
     <Project Path="SharpVideo/src/Examples/SharpVideo.FfmpegDemo/SharpVideo.FfmpegDemo.csproj" />
     <Project Path="SharpVideo/src/Examples/SharpVideo.ImGuiDemo/SharpVideo.ImGuiDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.MultiPlaneExample/SharpVideo.MultiPlaneExample.csproj" />
     <Project Path="SharpVideo/src/Examples/SharpVideo.MultiPlaneGlExample/SharpVideo.MultiPlaneGlExample.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.ParseH264Demo/SharpVideo.ParseH264Demo.csproj" />
     <Project Path="SharpVideo/src/Examples/SharpVideo.RtpPlayerDemo/SharpVideo.RtpPlayerDemo.csproj" />
-    <Project Path="SharpVideo/src/SharpVideo.Decoding/SharpVideo.Decoding.csproj" />
-    <Project Path="SharpVideo/src/SharpVideo.FfmpegBin/SharpVideo.FfmpegBin.csproj" />
-    <Project Path="SharpVideo/src/SharpVideo.ImGui/SharpVideo.ImGui.csproj" />
-    <Project Path="SharpVideo/src/SharpVideo.Linux.Native/SharpVideo.Linux.Native.csproj" />
-    <Project Path="SharpVideo/src/SharpVideo.Rtp/SharpVideo.Rtp.csproj" />
-    <Project Path="SharpVideo/src/SharpVideo.Utils/SharpVideo.Utils.csproj" />
-    <Project Path="SharpVideo/src/SharpVideo/SharpVideo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.V4L2DecodeDemo/SharpVideo.V4L2DecodeDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.V4L2DecodeDrmPreviewDemo/SharpVideo.V4L2DecodeDrmPreviewDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.V4L2Decoding/SharpVideo.V4L2Decoding.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.V4L2PrintInfo/SharpVideo.V4L2PrintInfo.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />

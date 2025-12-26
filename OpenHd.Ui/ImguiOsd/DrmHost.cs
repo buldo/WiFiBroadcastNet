@@ -145,9 +145,9 @@ internal sealed class DrmHost : UiHostBase
     {
         // Get decoder's output format upfront
         var decoderPixelFormat = H264Decoder.OutputPixelFormat;
-        var preferredDrmFormat = PixelFormatConverter.GetPreferredDrmFormat(decoderPixelFormat);
-        var requiresConversion = PixelFormatConverter.RequiresConversion(decoderPixelFormat, preferredDrmFormat);
-        var formatName = PixelFormatConverter.GetFormatName(decoderPixelFormat);
+        var preferredDrmFormat = decoderPixelFormat;
+        var requiresConversion = decoderPixelFormat != preferredDrmFormat;
+        var formatName = decoderPixelFormat.GetName();
 
         _logger.LogInformation(
             "Initializing DRM resources. Decoder format: {DecoderFormat}, DRM format: {DrmFormat}, Requires conversion: {RequiresConversion}",

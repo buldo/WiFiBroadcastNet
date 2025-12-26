@@ -54,9 +54,9 @@ internal sealed class VideoPlaneRenderer : IDisposable
         _bufferCount = bufferCount;
         _sourceFormat = sourceFormat;
         _targetDrmFormat = targetDrmFormat;
-        _requiresConversion = PixelFormatConverter.RequiresConversion(sourceFormat, targetDrmFormat);
+        _requiresConversion = sourceFormat != targetDrmFormat;
 
-        var sourceFormatName = PixelFormatConverter.GetFormatName(sourceFormat);
+        var sourceFormatName = sourceFormat.GetName();
         var targetFormatName = targetDrmFormat.GetName();
 
         if (_requiresConversion)
@@ -367,7 +367,7 @@ internal sealed class VideoPlaneRenderer : IDisposable
         {
             _logger.LogWarning(
                 "Unsupported conversion: {Source} -> {Target}",
-                PixelFormatConverter.GetFormatName(_sourceFormat),
+                _sourceFormat.GetName(),
                 _targetDrmFormat.GetName());
         }
     }

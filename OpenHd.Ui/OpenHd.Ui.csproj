@@ -16,15 +16,16 @@
     <PackageReference Include="Hexa.NET.OpenGL3" Version="1.1.0" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
     <PackageReference Include="libsodium" Version="1.0.20.1" />
-    <!--<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />-->
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <!--<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.1" />-->
+    <PackageReference Include="Silk.NET.OpenGLES" Version="2.22.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SharpVideo\src\SharpVideo.Decoding\SharpVideo.Decoding.csproj" />
     <ProjectReference Include="..\SharpVideo\src\SharpVideo.FfmpegBin\SharpVideo.FfmpegBin.csproj" />
+    <ProjectReference Include="..\SharpVideo\src\SharpVideo.ImGui\SharpVideo.ImGui.csproj" />
     <ProjectReference Include="..\SharpVideo\src\SharpVideo.Rtp\SharpVideo.Rtp.csproj" />
+    <ProjectReference Include="..\SharpVideo\src\SharpVideo.Utils\SharpVideo.Utils.csproj" />
     <ProjectReference Include="..\WiFiBroadcastNet\WiFiBroadcastNet.csproj" />
   </ItemGroup>
 

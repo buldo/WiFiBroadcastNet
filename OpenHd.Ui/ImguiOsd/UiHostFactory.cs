@@ -35,6 +35,7 @@ internal class UiHostFactory
         return new DrmHost(
             _h264Stream,
             _decodersFactory,
+            _loggerFactory,
             _loggerFactory.CreateLogger<DrmHost>());
     }
 

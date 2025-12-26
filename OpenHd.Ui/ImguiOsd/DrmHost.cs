@@ -240,12 +240,10 @@ internal sealed class DrmHost : UiHostBase
 
         _logger.LogInformation("ImGui manager initialized");
 
-        // Create video plane renderer for overlay with actual display dimensions
+        // Create video plane renderer for overlay (buffers allocated dynamically based on video resolution)
         _videoPlaneRenderer = new VideoPlaneRenderer(
             _presenter.OverlayPlanePresenter,
             _drmBufferManager,
-            actualWidth,
-            actualHeight,
             _loggerFactory.CreateLogger<VideoPlaneRenderer>());
 
         _logger.LogInformation("DRM resources initialized successfully (dual-plane mode)");

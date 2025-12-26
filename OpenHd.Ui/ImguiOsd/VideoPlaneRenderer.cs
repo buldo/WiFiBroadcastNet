@@ -1,4 +1,5 @@
 using System.Runtime.Versioning;
+using Microsoft.Extensions.Logging;
 using SharpVideo.Decoding;
 using SharpVideo.DmaBuffers;
 using SharpVideo.Drm;
@@ -9,6 +10,7 @@ namespace OpenHd.Ui.ImguiOsd;
 /// <summary>
 /// Manages video frame output to DRM overlay plane using DMA buffers.
 /// Converts YUV420P frames from FFmpeg to NV12 format for DRM display.
+/// Automatically handles video resolution changes by reallocating buffers.
 /// </summary>
 [SupportedOSPlatform("linux")]
 internal sealed class VideoPlaneRenderer : IDisposable
@@ -16,55 +18,32 @@ internal sealed class VideoPlaneRenderer : IDisposable
     private readonly DrmPlaneLastDmaBufferPresenter _overlayPresenter;
     private readonly DrmBufferManager _bufferManager;
     private readonly ILogger<VideoPlaneRenderer> _logger;
-    private readonly uint _width;
-    private readonly uint _height;
+    private readonly int _bufferCount;
 
     private readonly List<SharedDmaBuffer> _buffers = [];
     private int _currentBufferIndex;
+    private uint _currentVideoWidth;
+    private uint _currentVideoHeight;
     private bool _disposed;
 
     public VideoPlaneRenderer(
         DrmPlaneLastDmaBufferPresenter overlayPresenter,
         DrmBufferManager bufferManager,
-        uint width,
-        uint height,
         ILogger<VideoPlaneRenderer> logger,
         int bufferCount = 3)
     {
         _overlayPresenter = overlayPresenter ?? throw new ArgumentNullException(nameof(overlayPresenter));
         _bufferManager = bufferManager ?? throw new ArgumentNullException(nameof(bufferManager));
-        _width = width;
-        _height = height;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _bufferCount = bufferCount;
 
-        AllocateBuffers(bufferCount);
-    }
-
-    private void AllocateBuffers(int count)
-    {
-        _logger.LogInformation("Allocating {Count} NV12 buffers for video plane ({Width}x{Height})",
-            count, _width, _height);
-
-        for (int i = 0; i < count; i++)
-        {
-            var buffer = _bufferManager.AllocateBuffer(_width, _height, KnownPixelFormats.DRM_FORMAT_NV12);
-            buffer.MapBuffer();
-
-            if (buffer.MapStatus == MapStatus.FailedToMap)
-            {
-                _logger.LogError("Failed to map buffer {Index}", i);
-                throw new InvalidOperationException($"Failed to map DMA buffer {i}");
-            }
-
-            _buffers.Add(buffer);
-        }
-
-        _logger.LogInformation("Video plane buffers allocated successfully");
+        _logger.LogInformation("VideoPlaneRenderer created (buffers will be allocated on first frame)");
     }
 
     /// <summary>
     /// Renders a decoded FFmpeg frame to the overlay plane.
     /// Converts YUV420P to NV12 and presents via DRM.
+    /// Handles resolution changes automatically.
     /// </summary>
     public unsafe void RenderFrame(FfmpegDecodedFrame frame)
     {
@@ -74,6 +53,21 @@ internal sealed class VideoPlaneRenderer : IDisposable
         var avFrame = frame.Frame;
         if (avFrame == null)
         {
+            return;
+        }
+
+        var frameWidth = (uint)avFrame->width;
+        var frameHeight = (uint)avFrame->height;
+
+        // Check if we need to (re)allocate buffers for this resolution
+        if (frameWidth != _currentVideoWidth || frameHeight != _currentVideoHeight)
+        {
+            ReallocateBuffers(frameWidth, frameHeight);
+        }
+
+        if (_buffers.Count == 0)
+        {
+            _logger.LogWarning("No buffers available for rendering");
             return;
         }
 
@@ -94,6 +88,58 @@ internal sealed class VideoPlaneRenderer : IDisposable
         _ = _overlayPresenter.GetPresentedOverlayBuffers();
     }
 
+    private void ReallocateBuffers(uint width, uint height)
+    {
+        _logger.LogInformation(
+            "Video resolution changed: {OldWidth}x{OldHeight} -> {NewWidth}x{NewHeight}, reallocating buffers",
+            _currentVideoWidth, _currentVideoHeight, width, height);
+
+        // Free existing buffers
+        FreeBuffers();
+
+        // Allocate new buffers with video resolution
+        _logger.LogInformation("Allocating {Count} NV12 buffers for video ({Width}x{Height})",
+            _bufferCount, width, height);
+
+        for (int i = 0; i < _bufferCount; i++)
+        {
+            var buffer = _bufferManager.AllocateBuffer(width, height, KnownPixelFormats.DRM_FORMAT_NV12);
+            buffer.MapBuffer();
+
+            if (buffer.MapStatus == MapStatus.FailedToMap)
+            {
+                _logger.LogError("Failed to map buffer {Index}", i);
+                throw new InvalidOperationException($"Failed to map DMA buffer {i}");
+            }
+
+            _buffers.Add(buffer);
+        }
+
+        _currentVideoWidth = width;
+        _currentVideoHeight = height;
+        _currentBufferIndex = 0;
+
+        _logger.LogInformation("Video plane buffers allocated successfully");
+    }
+
+    private void FreeBuffers()
+    {
+        foreach (var buffer in _buffers)
+        {
+            try
+            {
+                buffer.DmaBuffer.UnmapBuffer();
+                buffer.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error disposing buffer");
+            }
+        }
+
+        _buffers.Clear();
+    }
+
     /// <summary>
     /// Converts YUV420P (planar) to NV12 (semi-planar) format.
     /// YUV420P: Y plane, U plane, V plane (all separate)
@@ -104,15 +150,11 @@ internal sealed class VideoPlaneRenderer : IDisposable
         var frameWidth = avFrame->width;
         var frameHeight = avFrame->height;
 
-        // Scale if needed (for now, assume same size or crop/pad)
-        var copyWidth = Math.Min((int)_width, frameWidth);
-        var copyHeight = Math.Min((int)_height, frameHeight);
-
         var dstSpan = buffer.DmaBuffer.GetMappedSpan();
         var dstStride = buffer.Stride;
 
         // Calculate NV12 plane offsets
-        var yPlaneSize = dstStride * _height;
+        var yPlaneSize = dstStride * buffer.Height;
         var uvPlaneOffset = yPlaneSize;
 
         // Source pointers and strides
@@ -126,17 +168,17 @@ internal sealed class VideoPlaneRenderer : IDisposable
         fixed (byte* dstPtr = dstSpan)
         {
             // Copy Y plane
-            for (int y = 0; y < copyHeight; y++)
+            for (int y = 0; y < frameHeight; y++)
             {
                 var srcRow = srcY + y * srcStrideY;
                 var dstRow = dstPtr + y * dstStride;
 
-                Buffer.MemoryCopy(srcRow, dstRow, dstStride, copyWidth);
+                Buffer.MemoryCopy(srcRow, dstRow, dstStride, frameWidth);
             }
 
             // Interleave U and V planes to create UV plane
-            var uvHeight = copyHeight / 2;
-            var uvWidth = copyWidth / 2;
+            var uvHeight = frameHeight / 2;
+            var uvWidth = frameWidth / 2;
 
             for (int y = 0; y < uvHeight; y++)
             {
@@ -162,13 +204,8 @@ internal sealed class VideoPlaneRenderer : IDisposable
 
         _logger.LogInformation("Disposing video plane renderer");
 
-        foreach (var buffer in _buffers)
-        {
-            buffer.DmaBuffer.UnmapBuffer();
-            buffer.Dispose();
-        }
+        FreeBuffers();
 
-        _buffers.Clear();
         _disposed = true;
     }
 }

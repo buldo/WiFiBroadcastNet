@@ -184,7 +184,18 @@ internal sealed class DrmHost : UiHostBase
             throw new InvalidOperationException("Failed to create DRM presenter");
         }
 
-        _logger.LogInformation("Created dual-plane DRM presenter");
+        // Get actual display dimensions (may differ from requested if fallback mode was used)
+        var actualWidth = _presenter.PrimaryPlanePresenter.Width;
+        var actualHeight = _presenter.PrimaryPlanePresenter.Height;
+
+        if (actualWidth != _configuration.DisplayWidth || actualHeight != _configuration.DisplayHeight)
+        {
+            _logger.LogWarning(
+                "Display mode differs from requested: requested {ReqWidth}x{ReqHeight}, actual {ActWidth}x{ActHeight}",
+                _configuration.DisplayWidth, _configuration.DisplayHeight, actualWidth, actualHeight);
+        }
+
+        _logger.LogInformation("Created dual-plane DRM presenter ({Width}x{Height})", actualWidth, actualHeight);
 
         // Configure z-order: Primary plane (ImGui OSD) on top, Overlay plane (video) below
         ConfigurePlaneZOrder();
@@ -193,8 +204,8 @@ internal sealed class DrmHost : UiHostBase
         if (_configuration.EnableInput)
         {
             _inputManager = new InputManager(
-                _configuration.DisplayWidth,
-                _configuration.DisplayHeight,
+                actualWidth,
+                actualHeight,
                 _loggerFactory.CreateLogger<InputManager>());
             _logger.LogInformation("Input manager initialized");
         }
@@ -206,11 +217,11 @@ internal sealed class DrmHost : UiHostBase
             throw new InvalidOperationException("Failed to get GBM atomic presenter");
         }
 
-        // Configure ImGui
+        // Configure ImGui with actual display dimensions
         var imguiConfig = new ImGuiDrmConfiguration
         {
-            Width = _configuration.DisplayWidth,
-            Height = _configuration.DisplayHeight,
+            Width = actualWidth,
+            Height = actualHeight,
             DrmDevice = _drmDevice,
             GbmDevice = _gbmDevice,
             GbmSurfaceHandle = gbmAtomicPresenter.GetNativeGbmSurfaceHandle(),
@@ -229,12 +240,12 @@ internal sealed class DrmHost : UiHostBase
 
         _logger.LogInformation("ImGui manager initialized");
 
-        // Create video plane renderer for overlay
+        // Create video plane renderer for overlay with actual display dimensions
         _videoPlaneRenderer = new VideoPlaneRenderer(
             _presenter.OverlayPlanePresenter,
             _drmBufferManager,
-            _configuration.DisplayWidth,
-            _configuration.DisplayHeight,
+            actualWidth,
+            actualHeight,
             _loggerFactory.CreateLogger<VideoPlaneRenderer>());
 
         _logger.LogInformation("DRM resources initialized successfully (dual-plane mode)");

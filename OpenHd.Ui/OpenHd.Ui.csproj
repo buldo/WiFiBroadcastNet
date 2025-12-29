@@ -16,7 +16,6 @@
     <PackageReference Include="Hexa.NET.OpenGL3" Version="1.1.0" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
     <PackageReference Include="libsodium" Version="1.0.20.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="Silk.NET.OpenGLES" Version="2.22.0" />
   </ItemGroup>
 

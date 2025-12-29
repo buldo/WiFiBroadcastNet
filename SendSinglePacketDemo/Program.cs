@@ -25,8 +25,9 @@ internal class Program
         var deviceName = "wlx00c0caa98097";
 
         var wlanManager = new WlanManager(NullLoggerFactory.Instance.CreateLogger<WlanManager>());
-        await wlanManager.TrySwitchToMonitorAsync(deviceName);
-        await wlanManager.IwSetFrequencyAndChannelWidth(deviceName, Channels.Ch140, ChannelWidth._20MHz);
+        // TODO: To fix
+        //await wlanManager.TrySwitchToMonitorAsync();
+        //await wlanManager.IwSetFrequencyAndChannelWidth(deviceName, Channels.Ch140, ChannelWidth._20MHz);
 
         var device = LibPcapLiveDeviceList.Instance.Single(d => d.Name == deviceName);
 

@@ -1,5 +1,5 @@
 ﻿using System.Threading.Channels;
-using WiFiBroadcastNet.Devices;
+using WiFiBroadcastNet.Radio.Common;
 
 namespace WiFiBroadcastNet.Rx;
 

@@ -1,7 +1,6 @@
-﻿using Bld.WlanUtils;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using WiFiBroadcastNet.Crypto;
-using WiFiBroadcastNet.Devices;
+using WiFiBroadcastNet.Radio.Common;
 using WiFiBroadcastNet.RadioStreams;
 
 namespace WiFiBroadcastNet;
@@ -75,11 +74,11 @@ public class WfbLink
         }
     }
 
-    public void SetChannel(WlanChannel wlanChannel)
+    public void SetChannel(ChannelFrequency wlanChannel)
     {
         foreach (var deviceHandler in _deviceHandlers)
         {
-            deviceHandler.SetChannel(wlanChannel);
+            deviceHandler.SetChannelFrequency(wlanChannel);
         }
     }
 

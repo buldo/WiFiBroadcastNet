@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WiFiBroadcastNet.Radio.Common\WiFiBroadcastNet.Radio.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Bld.Rtl8812auNet" Version="1.5.0" Condition="$(TargetFramework.Contains('windows'))" />
+	<PackageReference Include="Bld.WlanUtils" Version="1.0.0" />
+	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+	<PackageReference Include="Nito.Collections.Deque" Version="1.2.1" />
+	<PackageReference Include="SharpPcap" Version="6.3.1" />
+  </ItemGroup>
+
+</Project>

@@ -1,32 +1,30 @@
-﻿#if WINDOWS
+﻿using Microsoft.Extensions.Logging;
+using WiFiBroadcastNet.Radio.Common;
 
+#if WINDOWS
 using Rtl8812auNet;
+using WiFiBroadcastNet.Radio.ManagedDriver;
+#else
+using WiFiBroadcastNet.Radio.LinuxPcap;
+#endif
 
 namespace WiFiBroadcastNet.Devices;
 
 public class AutoDevicesProvider : IDevicesProvider
 {
-    private readonly WiFiDriver _wiFiDriver;
+    private readonly IDevicesProvider _devicesProvider;
 
-    public AutoDevicesProvider(
-        WiFiDriver wiFiDriver)
+    public AutoDevicesProvider(ILoggerFactory loggerFactory)
     {
-        _wiFiDriver = wiFiDriver;
+#if WINDOWS
+        _devicesProvider = new UserspaceDevicesProvider(new WiFiDriver(loggerFactory));
+#else
+        _devicesProvider = new PcapDevicesProvider(loggerFactory);
+#endif
     }
 
     public List<IRadioDevice> GetDevices()
     {
-        var usbDevices = _wiFiDriver.GetUsbDevices();
-        List<IRadioDevice> devices = new();
-        foreach (var device in usbDevices)
-        {
-            var rtlDevice = _wiFiDriver.CreateRtlDevice(device);
-            var wrapper = new UserspaceRadioDevice(rtlDevice);
-            devices.Add(wrapper);
-        }
-
-        return devices;
+        return _devicesProvider.GetDevices();
     }
 }
-
-#endif

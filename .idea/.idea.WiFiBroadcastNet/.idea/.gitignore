@@ -2,12 +2,14 @@
 /shelf/
 /workspace.xml
 # Rider ignored files
-/.idea.WiFiBroadcastNet.iml
-/modules.xml
 /contentModel.xml
 /projectSettingsUpdater.xml
-# Editor-based HTTP Client requests
-/httpRequests/
+/modules.xml
+/.idea.WiFiBroadcastNet.iml
+# Ignored default folder with query files
+/queries/
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/

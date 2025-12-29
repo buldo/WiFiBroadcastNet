@@ -1,0 +1,56 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Clients/">
+    <Project Path="OpenHd.Ui/OpenHd.Ui.csproj" Id="9e1dc59c-5404-4a2b-a9d1-94c501f88a96" />
+    <Project Path="WiFiBroadcastNet.GroundHost/WiFiBroadcastNet.GroundHost.csproj" />
+  </Folder>
+  <Folder Name="/OpenHd/">
+    <Project Path="OpenHd.Fec.Benchmarks/OpenHd.Fec.Benchmarks.csproj" />
+    <Project Path="OpenHd.Fec.Tests/OpenHd.Fec.Tests.csproj" />
+    <Project Path="OpenHd.Fec/OpenHd.Fec.csproj" />
+    <Project Path="SpaceWizards.Sodium.Interop/SpaceWizards.Sodium.Interop.csproj" />
+  </Folder>
+  <Folder Name="/SharpVideo/">
+    <Project Path="SharpVideo/src/SharpVideo.Decoding/SharpVideo.Decoding.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.FfmpegBin/SharpVideo.FfmpegBin.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.ImGui/SharpVideo.ImGui.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Linux.Native.Tests/SharpVideo.Linux.Native.Tests.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Linux.Native/SharpVideo.Linux.Native.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Rtp/SharpVideo.Rtp.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Tests/SharpVideo.Tests.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo.Utils/SharpVideo.Utils.csproj" />
+    <Project Path="SharpVideo/src/SharpVideo/SharpVideo.csproj" />
+  </Folder>
+  <Folder Name="/SharpVideo/Examples/">
+    <Project Path="SharpVideo/src/Examples/SharpVideo.DemoMedia/SharpVideo.DemoMedia.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.DrmDemo/SharpVideo.DrmDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.DrmDmaDemo/SharpVideo.DrmDmaDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.FfmpegDemo/SharpVideo.FfmpegDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.ImGuiDemo/SharpVideo.ImGuiDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.MultiPlaneExample/SharpVideo.MultiPlaneExample.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.MultiPlaneGlExample/SharpVideo.MultiPlaneGlExample.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.ParseH264Demo/SharpVideo.ParseH264Demo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.RtpPlayerDemo/SharpVideo.RtpPlayerDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.V4L2DecodeDemo/SharpVideo.V4L2DecodeDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.V4L2DecodeDrmPreviewDemo/SharpVideo.V4L2DecodeDrmPreviewDemo.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.V4L2Decoding/SharpVideo.V4L2Decoding.csproj" />
+    <Project Path="SharpVideo/src/Examples/SharpVideo.V4L2PrintInfo/SharpVideo.V4L2PrintInfo.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Folder Name="/TestApplications/">
+    <Project Path="PerformanceTester/PerformanceTester.csproj" />
+    <Project Path="SendSinglePacketDemo/SendSinglePacketDemo.csproj" />
+  </Folder>
+  <Project Path="WiFiBroadcastNet.Radio.Common/WiFiBroadcastNet.Radio.Common.csproj" Id="c3d2abc0-f78f-4199-b60c-724fd00e7d9f" />
+  <Project Path="WiFiBroadcastNet.Radio.LinuxPcap/WiFiBroadcastNet.Radio.LinuxPcap.csproj" Id="77e202ad-04ac-4d9a-bb3b-bbe53faf9c47" />
+  <Project Path="WiFiBroadcastNet.Radio.ManagedDriver/WiFiBroadcastNet.Radio.ManagedDriver.csproj" Id="d76f62da-e092-477e-8262-d4936af83a35" />
+  <Project Path="WiFiBroadcastNet/WiFiBroadcastNet.csproj" />
+</Solution>

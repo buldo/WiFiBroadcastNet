@@ -2,6 +2,7 @@ using System.Runtime.Versioning;
 using FFmpeg.AutoGen;
 using Microsoft.Extensions.Logging;
 using SharpVideo.Decoding;
+using SharpVideo.Decoding.V4l2;
 using SharpVideo.DmaBuffers;
 using SharpVideo.Drm;
 using SharpVideo.Utils;
@@ -10,7 +11,7 @@ namespace OpenHd.Ui.ImguiOsd;
 
 /// <summary>
 /// Manages video frame output to DRM overlay plane using DMA buffers.
-/// Copies decoded FFmpeg frames to DMA buffers for display.
+/// Supports both FFmpeg frames (with copy) and V4L2 DMA-BUF frames (zero-copy).
 /// </summary>
 [SupportedOSPlatform("linux")]
 internal sealed class VideoPlaneRenderer : IDisposable
@@ -34,7 +35,7 @@ internal sealed class VideoPlaneRenderer : IDisposable
     /// <param name="bufferManager">Buffer manager for DMA buffer allocation</param>
     /// <param name="pixelFormat">Pixel format for both decoder output and DRM plane</param>
     /// <param name="logger">Logger instance</param>
-    /// <param name="bufferCount">Number of buffers to allocate</param>
+    /// <param name="bufferCount">Number of buffers to allocate (for FFmpeg copy mode)</param>
     public VideoPlaneRenderer(
         DrmPlaneLastDmaBufferPresenter overlayPresenter,
         DrmBufferManager bufferManager,
@@ -58,14 +59,89 @@ internal sealed class VideoPlaneRenderer : IDisposable
     }
 
     /// <summary>
-    /// Renders a decoded FFmpeg frame to the overlay plane.
-    /// Handles resolution changes automatically.
+    /// Renders a decoded frame to the overlay plane.
+    /// Automatically selects zero-copy or copy path based on frame type.
     /// </summary>
-    public unsafe void RenderFrame(FfmpegDecodedFrame frame)
+    public void RenderFrame(UniversalDecodedFrame frame)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(frame);
 
+        switch (frame)
+        {
+            case V4l2DecodedFrame v4l2Frame:
+                RenderV4l2Frame(v4l2Frame);
+                break;
+            case FfmpegDecodedFrame ffmpegFrame:
+                RenderFfmpegFrame(ffmpegFrame);
+                break;
+            default:
+                _logger.LogWarning("Unsupported frame type: {Type}", frame.GetType().Name);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Renders V4L2 frame. Uses zero-copy for DMA-BUF, copy for MMAP.
+    /// </summary>
+    private void RenderV4l2Frame(V4l2DecodedFrame frame)
+    {
+        if (frame.IsDmaBuf && frame.DmaBuffer is not null)
+        {
+            // Zero-copy path: V4L2 decoder already output to DMA buffer
+            _logger.LogTrace("Zero-copy V4L2 DMA-BUF frame to overlay plane");
+            _overlayPresenter.SetOverlayPlaneBuffer(frame.DmaBuffer);
+            _ = _overlayPresenter.GetPresentedOverlayBuffers();
+        }
+        else if (frame.MmapBuffer is not null)
+        {
+            // MMAP path: need to copy to DMA buffer
+            RenderV4l2MmapFrame(frame);
+        }
+    }
+
+    /// <summary>
+    /// Renders V4L2 MMAP frame by copying to DMA buffer.
+    /// </summary>
+    private void RenderV4l2MmapFrame(V4l2DecodedFrame frame)
+    {
+        if (frame.MmapBuffer is null)
+        {
+            return;
+        }
+
+        // Check if we need to (re)allocate buffers for this resolution
+        if (frame.Width != _currentVideoWidth || frame.Height != _currentVideoHeight)
+        {
+            ReallocateBuffers(frame.Width, frame.Height);
+        }
+
+        if (_buffers.Count == 0)
+        {
+            _logger.LogWarning("No buffers available for rendering");
+            return;
+        }
+
+        // Get next buffer
+        var buffer = _buffers[_currentBufferIndex];
+        _currentBufferIndex = (_currentBufferIndex + 1) % _buffers.Count;
+
+        // Copy from MMAP buffer to DMA buffer
+        var srcSpan = frame.MmapBuffer.MappedPlanes[0].AsSpan();
+        var dstSpan = buffer.DmaBuffer.GetMappedSpan();
+        srcSpan[..Math.Min(srcSpan.Length, dstSpan.Length)].CopyTo(dstSpan);
+
+        buffer.DmaBuffer.SyncMap();
+        _overlayPresenter.SetOverlayPlaneBuffer(buffer);
+        _ = _overlayPresenter.GetPresentedOverlayBuffers();
+    }
+
+    /// <summary>
+    /// Renders a decoded FFmpeg frame to the overlay plane.
+    /// Handles resolution changes automatically.
+    /// </summary>
+    private unsafe void RenderFfmpegFrame(FfmpegDecodedFrame frame)
+    {
         var avFrame = frame.Frame;
         if (avFrame == null)
         {
@@ -92,7 +168,7 @@ internal sealed class VideoPlaneRenderer : IDisposable
         _currentBufferIndex = (_currentBufferIndex + 1) % _buffers.Count;
 
         // Copy frame data to DMA buffer
-        CopyFrame(avFrame, buffer);
+        CopyFfmpegFrame(avFrame, buffer);
 
         // Sync the buffer to ensure GPU/display can see the data
         buffer.DmaBuffer.SyncMap();
@@ -157,9 +233,9 @@ internal sealed class VideoPlaneRenderer : IDisposable
     }
 
     /// <summary>
-    /// Copies frame data based on the pixel format.
+    /// Copies FFmpeg frame data based on the pixel format.
     /// </summary>
-    private unsafe void CopyFrame(AVFrame* avFrame, SharedDmaBuffer buffer)
+    private unsafe void CopyFfmpegFrame(AVFrame* avFrame, SharedDmaBuffer buffer)
     {
         var dstSpan = buffer.DmaBuffer.GetMappedSpan();
         var dstStride = buffer.Stride;

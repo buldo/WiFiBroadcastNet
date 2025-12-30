@@ -4,6 +4,7 @@ using Hexa.NET.ImGui;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SharpVideo.Decoding;
+using SharpVideo.Decoding.V4l2;
 using SharpVideo.DmaBuffers;
 using SharpVideo.Drm;
 using SharpVideo.Gbm;
@@ -381,26 +382,48 @@ internal sealed class DrmHost : UiHostBase
         _logger.LogInformation("Render loop exited after {FrameCount} frames", frameCount);
     }
 
-    private unsafe void RenderVideoFrame()
+    private void RenderVideoFrame()
     {
         var frame = _videoFrameManager?.AcquireCurrentFrame();
         if (frame != null)
         {
             _logger.LogTrace("Rendering video frame to overlay plane");
 
-            var frameData = frame.Frame;
-            _uiRenderer?.UpdateFrameStatistics(
-                frameData->width,
-                frameData->height,
-                frameData->format,
-                frameData->pts,
-                (frameData->flags & ffmpeg.AV_FRAME_FLAG_KEY) != 0);
+            // Update UI statistics based on frame type
+            UpdateFrameStatistics(frame);
 
             // Render video to overlay plane
             _videoPlaneRenderer?.RenderFrame(frame);
 
             _videoFrameManager?.ReleaseFrame(frame);
             _logger.LogTrace("Video frame presented");
+        }
+    }
+
+    private unsafe void UpdateFrameStatistics(UniversalDecodedFrame frame)
+    {
+        switch (frame)
+        {
+            case FfmpegDecodedFrame ffmpegFrame:
+                var avFrame = ffmpegFrame.Frame;
+                if (avFrame != null)
+                {
+                    _uiRenderer?.UpdateFrameStatistics(
+                        avFrame->width,
+                        avFrame->height,
+                        avFrame->format,
+                        avFrame->pts,
+                        (avFrame->flags & ffmpeg.AV_FRAME_FLAG_KEY) != 0);
+                }
+                break;
+            case V4l2DecodedFrame v4l2Frame:
+                _uiRenderer?.UpdateFrameStatistics(
+                    (int)v4l2Frame.Width,
+                    (int)v4l2Frame.Height,
+                    0, // V4L2 doesn't use AVPixelFormat
+                    0, // No PTS available from V4L2
+                    false); // Key frame detection not available
+                break;
         }
     }
 

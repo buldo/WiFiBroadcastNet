@@ -218,12 +218,12 @@ internal sealed class WindowedHost : UiHostBase
 
         // Render video frame
         var frame = _videoFrameManager!.AcquireCurrentFrame();
-        if (frame != null)
+        if (frame is FfmpegDecodedFrame ffmpegFrame)
         {
             _logger.LogTrace("Uploading frame to OpenGL");
-            _glRenderer!.UploadFrame(frame);
+            _glRenderer!.UploadFrame(ffmpegFrame);
 
-            var frameData = frame.Frame;
+            var frameData = ffmpegFrame.Frame;
             _uiRenderer!.UpdateFrameStatistics(
                 frameData->width,
                 frameData->height,
@@ -233,6 +233,12 @@ internal sealed class WindowedHost : UiHostBase
 
             _videoFrameManager.ReleaseFrame(frame);
             _logger.LogTrace("Frame returned to decoder");
+        }
+        else if (frame != null)
+        {
+            // Non-FFmpeg frame type - release without rendering
+            _logger.LogWarning("WindowedHost only supports FFmpeg frames, got {Type}", frame.GetType().Name);
+            _videoFrameManager.ReleaseFrame(frame);
         }
 
         if (_glRenderer != null && _glRenderer.HasFrame)

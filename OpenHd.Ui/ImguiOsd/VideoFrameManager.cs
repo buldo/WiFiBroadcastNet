@@ -14,7 +14,7 @@ internal sealed class VideoFrameManager : IDisposable
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly object _frameLock = new();
     
-    private FfmpegDecodedFrame? _currentFrame;
+    private UniversalDecodedFrame? _currentFrame;
     private Task? _frameFetchThread;
     private bool _disposed;
 
@@ -73,7 +73,7 @@ internal sealed class VideoFrameManager : IDisposable
     /// Returns null if no frame is available.
     /// The caller is responsible for calling ReleaseFrame() after rendering.
     /// </summary>
-    public FfmpegDecodedFrame? AcquireCurrentFrame()
+    public UniversalDecodedFrame? AcquireCurrentFrame()
     {
         lock (_frameLock)
         {
@@ -86,7 +86,7 @@ internal sealed class VideoFrameManager : IDisposable
     /// <summary>
     /// Releases a frame back to the decoder for reuse.
     /// </summary>
-    public void ReleaseFrame(FfmpegDecodedFrame frame)
+    public void ReleaseFrame(UniversalDecodedFrame frame)
     {
         ArgumentNullException.ThrowIfNull(frame);
         
@@ -110,35 +110,32 @@ internal sealed class VideoFrameManager : IDisposable
 
                 _logger.LogTrace("Received decoded frame #{Count}", frameCount + 1);
 
-                if (decodedFrame is FfmpegDecodedFrame ffmpegFrame)
+                UniversalDecodedFrame? frameToReturn = null;
+
+                lock (_frameLock)
                 {
-                    FfmpegDecodedFrame? frameToReturn = null;
-
-                    lock (_frameLock)
+                    if (_currentFrame != null)
                     {
-                        if (_currentFrame != null)
-                        {
-                            _logger.LogWarning(
-                                "Overwriting unrendered frame! Frame #{Count} - returning old frame", 
-                                frameCount);
-                            frameToReturn = _currentFrame;
-                        }
-                        _currentFrame = ffmpegFrame;
-                        _logger.LogTrace("Frame #{Count} ready for rendering", frameCount + 1);
+                        _logger.LogWarning(
+                            "Overwriting unrendered frame! Frame #{Count} - returning old frame", 
+                            frameCount);
+                        frameToReturn = _currentFrame;
                     }
+                    _currentFrame = decodedFrame;
+                    _logger.LogTrace("Frame #{Count} ready for rendering", frameCount + 1);
+                }
 
-                    if (frameToReturn != null)
-                    {
-                        _logger.LogTrace("Returning overwritten frame to decoder");
-                        _decoder.ReuseDecodedFrame(frameToReturn);
-                    }
+                if (frameToReturn != null)
+                {
+                    _logger.LogTrace("Returning overwritten frame to decoder");
+                    _decoder.ReuseDecodedFrame(frameToReturn);
+                }
 
-                    frameCount++;
+                frameCount++;
 
-                    if (frameCount % 30 == 0)
-                    {
-                        _logger.LogDebug("Fetched {Count} frames so far", frameCount);
-                    }
+                if (frameCount % 30 == 0)
+                {
+                    _logger.LogDebug("Fetched {Count} frames so far", frameCount);
                 }
             }
         }

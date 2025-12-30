@@ -5,7 +5,7 @@
         <OutputType>Exe</OutputType>
     </PropertyGroup>
 <!-- Temp linux aarch64 fix -->
-<PropertyGroup>
+<PropertyGroup Condition="'$(OS)' == 'Unix'">
   <Protobuf_ProtocFullPath>/usr/bin/protoc</Protobuf_ProtocFullPath>
 </PropertyGroup>
 

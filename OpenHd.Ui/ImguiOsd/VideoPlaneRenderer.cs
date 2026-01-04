@@ -91,7 +91,6 @@ internal sealed class VideoPlaneRenderer : IDisposable
             // Zero-copy path: V4L2 decoder already output to DMA buffer
             _logger.LogTrace("Zero-copy V4L2 DMA-BUF frame to overlay plane");
             _overlayPresenter.SetOverlayPlaneBuffer(frame.DmaBuffer);
-            _ = _overlayPresenter.GetPresentedOverlayBuffers();
         }
         else if (frame.MmapBuffer is not null)
         {
@@ -133,7 +132,6 @@ internal sealed class VideoPlaneRenderer : IDisposable
 
         buffer.DmaBuffer.SyncMap();
         _overlayPresenter.SetOverlayPlaneBuffer(buffer);
-        _ = _overlayPresenter.GetPresentedOverlayBuffers();
     }
 
     /// <summary>
@@ -175,9 +173,6 @@ internal sealed class VideoPlaneRenderer : IDisposable
 
         // Present on overlay plane
         _overlayPresenter.SetOverlayPlaneBuffer(buffer);
-
-        // Return completed buffers (they will be reused automatically)
-        _ = _overlayPresenter.GetPresentedOverlayBuffers();
     }
 
     private void ReallocateBuffers(uint width, uint height)

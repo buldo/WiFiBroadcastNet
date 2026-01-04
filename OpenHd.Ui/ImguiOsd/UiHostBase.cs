@@ -37,18 +37,16 @@ internal abstract partial class UiHostBase : IHostedService
 
     private void ReceiveH624(ReadOnlyMemory<byte> payload)
     {
-        // TODO: Less array copies
-        var packet = new RTPPacket(payload.ToArray());
+        var packet = new RTPPacket(payload.Span);
         var hdr = packet.Header;
         var frame = _h264Depacketiser.ProcessRTPPayload(packet.Payload, hdr.SequenceNumber, hdr.Timestamp, hdr.MarkerBit, out var isKeyFrame);
         if (frame != null)
         {
-            var nalu = frame.ToArray();
-            ProcessNalu(nalu);
+            ProcessNalu(frame);
         }
     }
 
-    private void ProcessNalu(ReadOnlySpan<byte> nalu)
+    private void ProcessNalu(MemoryStream frame)
     {
         var buffer = H264Decoder.GetEncodedBuffersForReuse();
         if (buffer == null)
@@ -59,7 +57,9 @@ internal abstract partial class UiHostBase : IHostedService
 
         if (buffer is ManagedMemoryEncodedBuffer memBuf)
         {
-            memBuf.CopyFromSpan(nalu);
+            // Use the internal buffer of MemoryStream to avoid ToArray() copy
+            var internalBuffer = frame.GetBuffer();
+            memBuf.CopyFromSpan(internalBuffer.AsSpan(0, (int)frame.Length));
         }
 
         H264Decoder.AddBufferForDecode(buffer);

@@ -43,6 +43,7 @@ internal sealed class DrmHost : UiHostBase
     private InputManager? _inputManager;
     private ImGuiManager? _imguiManager;
     private VideoPlaneRenderer? _videoPlaneRenderer;
+    private readonly Dictionary<SharedDmaBuffer, UniversalDecodedFrame> _framesInUseByDrm = new();
 
     public DrmHost(
         [FromKeyedServices("h264-stream")] InMemoryPipeStreamAccessor h264Stream,
@@ -384,6 +385,9 @@ internal sealed class DrmHost : UiHostBase
 
     private void RenderVideoFrame()
     {
+        // Release buffers that DRM has finished displaying
+        ReleaseCompletedFrames();
+
         var frame = _videoFrameManager?.AcquireCurrentFrame();
         if (frame != null)
         {
@@ -392,11 +396,44 @@ internal sealed class DrmHost : UiHostBase
             // Update UI statistics based on frame type
             UpdateFrameStatistics(frame);
 
-            // Render video to overlay plane
-            _videoPlaneRenderer?.RenderFrame(frame);
-
-            _videoFrameManager?.ReleaseFrame(frame);
+            // If it's a V4L2 DMA-BUF frame, we must hold it until DRM finishes displaying it
+            if (frame is V4l2DecodedFrame { IsDmaBuf: true, DmaBuffer: not null } v4l2Frame)
+            {
+                lock (_framesInUseByDrm)
+                {
+                    _framesInUseByDrm[v4l2Frame.DmaBuffer] = frame;
+                }
+                _videoPlaneRenderer?.RenderFrame(frame);
+            }
+            else
+            {
+                // For other frame types (FFmpeg or MMAP), a copy occurs,
+                // so the original frame can be released immediately
+                _videoPlaneRenderer?.RenderFrame(frame);
+                _videoFrameManager?.ReleaseFrame(frame);
+            }
+            
             _logger.LogTrace("Video frame presented");
+        }
+    }
+
+    private void ReleaseCompletedFrames()
+    {
+        if (_presenter?.OverlayPlanePresenter == null) return;
+
+        var completedBuffers = _presenter.OverlayPlanePresenter.GetPresentedOverlayBuffers();
+        if (completedBuffers.Length > 0)
+        {
+            lock (_framesInUseByDrm)
+            {
+                foreach (var buffer in completedBuffers)
+                {
+                    if (_framesInUseByDrm.Remove(buffer, out var frameToRelease))
+                    {
+                        _videoFrameManager?.ReleaseFrame(frameToRelease);
+                    }
+                }
+            }
         }
     }
 
@@ -436,6 +473,16 @@ internal sealed class DrmHost : UiHostBase
     private void CleanupResources()
     {
         _logger.LogInformation("Cleaning up DRM resources");
+
+        // Release any frames still in use by DRM
+        lock (_framesInUseByDrm)
+        {
+            foreach (var frame in _framesInUseByDrm.Values)
+            {
+                _videoFrameManager?.ReleaseFrame(frame);
+            }
+            _framesInUseByDrm.Clear();
+        }
 
         _videoPlaneRenderer?.Dispose();
         _imguiManager?.Dispose();

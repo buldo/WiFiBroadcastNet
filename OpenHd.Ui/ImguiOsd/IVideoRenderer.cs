@@ -1,4 +1,4 @@
-using SharpVideo.Decoding;
+using SharpVideo.Decoding.Ffmpeg;
 
 namespace OpenHd.Ui.ImguiOsd;
 

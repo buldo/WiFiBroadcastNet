@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using Hexa.NET.ImGui;
-using Microsoft.Extensions.Logging;
 
 namespace OpenHd.Ui.ImguiOsd;
 
@@ -50,7 +49,7 @@ internal sealed class ImGuiUiRenderer
     {
         if (_showDemoWindow)
         {
-            ImGui.ShowDemoWindow();
+            Hexa.NET.ImGui.ImGui.ShowDemoWindow();
         }
 
         RenderStatisticsWindow();
@@ -60,23 +59,23 @@ internal sealed class ImGuiUiRenderer
 
     private void RenderStatisticsWindow()
     {
-        ImGui.SetNextWindowPos(new Vector2(10, 10), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowSize(new Vector2(300, 200), ImGuiCond.FirstUseEver);
+        Hexa.NET.ImGui.ImGui.SetNextWindowPos(new Vector2(10, 10), ImGuiCond.FirstUseEver);
+        Hexa.NET.ImGui.ImGui.SetNextWindowSize(new Vector2(300, 200), ImGuiCond.FirstUseEver);
 
-        if (ImGui.Begin("Decoder Statistics"))
+        if (Hexa.NET.ImGui.ImGui.Begin("Decoder Statistics"))
         {
             if (_lastFrameWidth > 0)
             {
-                ImGui.Text($"Resolution: {_lastFrameWidth}x{_lastFrameHeight}");
-                ImGui.Text($"Format: {_lastFrameFormat}");
-                ImGui.Text($"PTS: {_lastFramePts}");
-                ImGui.Text($"Key Frame: {_lastFrameIsKey}");
+                Hexa.NET.ImGui.ImGui.Text($"Resolution: {_lastFrameWidth}x{_lastFrameHeight}");
+                Hexa.NET.ImGui.ImGui.Text($"Format: {_lastFrameFormat}");
+                Hexa.NET.ImGui.ImGui.Text($"PTS: {_lastFramePts}");
+                Hexa.NET.ImGui.ImGui.Text($"Key Frame: {_lastFrameIsKey}");
             }
             else
             {
-                ImGui.Text("Waiting for frames...");
+                Hexa.NET.ImGui.ImGui.Text("Waiting for frames...");
             }
         }
-        ImGui.End();
+        Hexa.NET.ImGui.ImGui.End();
     }
 }

@@ -12,19 +12,16 @@
     <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" />
     <PackageReference Include="Hexa.NET.ImGui.Backends.SDL3" Version="1.0.18" />
     <PackageReference Include="Hexa.NET.SDL3" Version="1.2.16" />
-    <PackageReference Include="Hexa.NET.Utilities" Version="2.2.5" />
+    <PackageReference Include="Hexa.NET.Utilities" Version="2.2.8" />
     <PackageReference Include="Hexa.NET.OpenGL3" Version="1.1.0" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
-    <PackageReference Include="libsodium" Version="1.0.20.1" />
+    <PackageReference Include="SharpVideo.Decoding" Version="0.1.0" />
+    <PackageReference Include="SharpVideo.FfmpegBin" Version="8.0.0" />
+    <PackageReference Include="SharpVideo.ImGui" Version="0.1.0" />
     <PackageReference Include="Silk.NET.OpenGLES" Version="2.22.0" />
+    <PackageReference Include="SharpRTSP" Version="1.10.2" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\SharpVideo\src\SharpVideo.Decoding\SharpVideo.Decoding.csproj" />
-    <ProjectReference Include="..\SharpVideo\src\SharpVideo.FfmpegBin\SharpVideo.FfmpegBin.csproj" />
-    <ProjectReference Include="..\SharpVideo\src\SharpVideo.ImGui\SharpVideo.ImGui.csproj" />
-    <ProjectReference Include="..\SharpVideo\src\SharpVideo.Rtp\SharpVideo.Rtp.csproj" />
-    <ProjectReference Include="..\SharpVideo\src\SharpVideo.Utils\SharpVideo.Utils.csproj" />
+	<ItemGroup>
     <ProjectReference Include="..\WiFiBroadcastNet\WiFiBroadcastNet.csproj" />
   </ItemGroup>
 

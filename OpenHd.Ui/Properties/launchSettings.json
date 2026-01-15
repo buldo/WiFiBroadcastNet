@@ -1,8 +1,7 @@
 {
   "profiles": {
-    "OpenHd.Ui": {
+    "SharpVideo.Decoding.OhdDemo": {
       "commandName": "Project",
-      "launchBrowser": false,
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }

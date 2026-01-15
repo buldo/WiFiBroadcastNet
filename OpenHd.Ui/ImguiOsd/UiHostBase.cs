@@ -1,72 +1,145 @@
-﻿using SharpVideo.Decoding;
-using SharpVideo.Rtp;
+﻿using System.Collections.Concurrent;
+using Rtsp.Rtp;
+using SharpVideo.Decoding;
 
 namespace OpenHd.Ui.ImguiOsd;
 
-internal abstract partial class UiHostBase : IHostedService
+internal abstract class UiHostBase<TDecoder, TDecoderOutputBuffer> : IUiHost
+    where TDecoder: BaseDecoder<TDecoderOutputBuffer>, IDecoder
+    where TDecoderOutputBuffer : class
 {
-    private readonly InMemoryPipeStreamAccessor _h264Stream;
-    private readonly H264Depacketiser _h264Depacketiser = new();
-    private readonly ILogger<UiHostBase> _logger;
-    private Task _decodingThread;
+    private readonly H264Payload _h264Depacketiser = new();
+    private readonly BlockingCollection<RawMediaFrame> _frameQueue = new(boundedCapacity: 32);
 
-    protected readonly BaseDecoder H264Decoder;
+    protected readonly CancellationTokenSource CancellationTokenSource = new();
+    protected readonly ILoggerFactory LoggerFactory;
+    protected readonly ILogger Logger;
+    protected readonly TDecoder H264Decoder;
+
+    protected Task? DrawThread;
+    private Task? _decodeThread;
+    protected VideoFrameManager<TDecoder, TDecoderOutputBuffer>? VideoFrameManager;
+    protected ImGuiUiRenderer? UiRenderer;
+
+    protected abstract bool ShowDemoWindow { get; }
 
     protected UiHostBase(
         InMemoryPipeStreamAccessor h264Stream,
-        DecodersFactory decodersFactory,
-        ILogger<UiHostBase> logger)
+        TDecoder decoder,
+        ILoggerFactory loggerFactory,
+        ILogger logger)
     {
-        _h264Stream = h264Stream;
-        H264Decoder = decodersFactory.CreateH264Decoder();
-        H264Decoder.Start();
-        _logger = logger;
-        _h264Stream.SetReceiveAction(ReceiveH624);
+        LoggerFactory = loggerFactory;
+        Logger = logger;
+
+        H264Decoder = decoder;
+
+        h264Stream.SetReceiveAction(ReceiveH624);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        //_decodingThread = Task.Factory.StartNew(DecodingThread, TaskCreationOptions.LongRunning);
-        Start();
+        Logger.LogInformation("Starting {HostType}", GetType().Name);
+
+        VideoFrameManager = new VideoFrameManager<TDecoder, TDecoderOutputBuffer>(
+            H264Decoder,
+            LoggerFactory.CreateLogger<VideoFrameManager<TDecoder, TDecoderOutputBuffer>>());
+
+        UiRenderer = new ImGuiUiRenderer(
+            LoggerFactory.CreateLogger<ImGuiUiRenderer>(),
+            customRenderCallback: null,
+            showDemoWindow: ShowDemoWindow);
+
+        DrawThread = Task.Factory.StartNew(RunDrawThread, TaskCreationOptions.LongRunning);
+        _decodeThread = Task.Factory.StartNew(RunDecodeThread, TaskCreationOptions.LongRunning);
+        VideoFrameManager.Start();
+
+        OnStart();
         return Task.CompletedTask;
     }
 
-    public abstract Task StopAsync(CancellationToken cancellationToken);
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        Logger.LogInformation("Stopping {HostType}", GetType().Name);
+        await CancellationTokenSource.CancelAsync();
 
-    protected abstract void Start();
+        _frameQueue.CompleteAdding();
+
+        if (DrawThread != null)
+        {
+            await DrawThread;
+        }
+
+        if (_decodeThread != null)
+        {
+            await _decodeThread;
+        }
+
+        if (VideoFrameManager != null)
+        {
+            await VideoFrameManager.StopAsync();
+            VideoFrameManager.Dispose();
+        }
+
+        OnStop();
+    }
+
+    /// <summary>
+    /// Called after StartAsync completes initialization. Override for additional setup.
+    /// </summary>
+    protected virtual void OnStart() { }
+
+    /// <summary>
+    /// Called after StopAsync completes cleanup. Override for additional cleanup.
+    /// </summary>
+    protected virtual void OnStop() { }
+
+    /// <summary>
+    /// Main drawing thread implementation. Must be implemented by derived classes.
+    /// </summary>
+    protected abstract void RunDrawThread();
 
     private void ReceiveH624(ReadOnlyMemory<byte> payload)
     {
-        var packet = new RTPPacket(payload.Span);
-        var hdr = packet.Header;
-        var frame = _h264Depacketiser.ProcessRTPPayload(packet.Payload, hdr.SequenceNumber, hdr.Timestamp, hdr.MarkerBit, out var isKeyFrame);
-        if (frame != null)
+        var packet = new RtpPacket(payload.Span);
+        var frame = _h264Depacketiser.ProcessPacket(packet);
+        if (frame.Any())
         {
-            ProcessNalu(frame);
+            try
+            {
+                _frameQueue.Add(frame);
+            }
+            catch (InvalidOperationException)
+            {
+                // Queue is completed, dispose the frame
+                frame.Dispose();
+            }
         }
     }
 
-    private void ProcessNalu(MemoryStream frame)
+    private void RunDecodeThread()
     {
-        var buffer = H264Decoder.GetEncodedBuffersForReuse();
-        if (buffer == null)
+        try
         {
-            _logger.LogWarning("Skipping frame");
-            return;
+            foreach (var frame in _frameQueue.GetConsumingEnumerable(CancellationTokenSource.Token))
+            {
+                ProcessNalu(frame);
+            }
         }
-
-        if (buffer is ManagedMemoryEncodedBuffer memBuf)
+        catch (OperationCanceledException)
         {
-            // Use the internal buffer of MemoryStream to avoid ToArray() copy
-            var internalBuffer = frame.GetBuffer();
-            memBuf.CopyFromSpan(internalBuffer.AsSpan(0, (int)frame.Length));
+            // Expected during shutdown
         }
-
-        H264Decoder.AddBufferForDecode(buffer);
     }
 
-    private unsafe void DecodingThread()
+    private void ProcessNalu(RawMediaFrame frame)
     {
+        foreach (var nalu in frame.Data)
+        {
+            // Directly decode the NALU - decoder manages buffers internally
+            H264Decoder.Decode(nalu.Span);
+        }
 
+        frame.Dispose();
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using WiFiBroadcastNet;
 
 namespace OpenHd.Ui;
